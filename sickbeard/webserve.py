@@ -1046,6 +1046,7 @@ class ConfigProviders:
     @cherrypy.expose
     def saveProviders(self, nzbmatrix_username=None, nzbmatrix_apikey=None,
                       nzbs_r_us_uid=None, nzbs_r_us_hash=None, newznab_string=None,
+                      torrentleech_key=None,
                       tvtorrents_digest=None, tvtorrents_hash=None,
                       thepiratebay_trusted=None, thepiratebay_proxy=None, thepiratebay_proxy_url=None,
  					  btn_api_key=None,
@@ -1116,6 +1117,8 @@ class ConfigProviders:
                 sickbeard.TORRENTZ = curEnabled
             elif curProvider == 'thepiratebay':
                 sickbeard.THEPIRATEBAY = curEnabled 
+            elif curProvider == 'torrentleech':
+                sickbeard.TORRENTLEECH = curEnabled
             elif curProvider == 'tvtorrents':
                 sickbeard.TVTORRENTS = curEnabled
             elif curProvider == 'dailytvtorrents':
@@ -1126,6 +1129,8 @@ class ConfigProviders:
                 newznabProviderDict[curProvider].enabled = bool(curEnabled)
             else:
                 logger.log(u"don't know what "+curProvider+" is, skipping")
+
+        sickbeard.TORRENTLEECH_KEY = torrentleech_key.strip()
 
         sickbeard.TVTORRENTS_DIGEST = tvtorrents_digest.strip()
         sickbeard.TVTORRENTS_HASH = tvtorrents_hash.strip()
