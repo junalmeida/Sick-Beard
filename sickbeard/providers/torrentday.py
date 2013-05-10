@@ -126,10 +126,6 @@ class TorrentDayProvider(generic.TorrentProvider):
             cookie = cookielib.CookieJar()
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
             
-            #########3
-            proxy = urllib2.ProxyHandler({'http': 'http://127.0.0.1:3636'})
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie), proxy)
-            #########3
             
             
             login_data = urllib.urlencode({'username' : username, 'password' : password, 'submit.x': 0, 'submit.y': 0})
@@ -182,10 +178,6 @@ class TorrentDayProvider(generic.TorrentProvider):
             result = None
             try:
                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-                #########3
-                proxy = urllib2.ProxyHandler({'http': 'http://127.0.0.1:3636'})
-                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj), proxy)
-                #########3
                 search_data = data
                 result = opener.open(url, search_data)
                 #result = opener.open('http://www.torrentday.com/V3/API/API.php', search_data)
