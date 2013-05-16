@@ -15,7 +15,7 @@ from sickbeard.common import Overview
 
 import traceback
 
-
+from bs4 import BeautifulSoup
 import urllib, urllib2, cookielib
 import re, json, socket,datetime
 
@@ -28,6 +28,9 @@ class TorrentDayProvider(generic.TorrentProvider):
         self.supportsBacklog = True
         self.cache = TorrentDayCache(self)
         self.cj = cookielib.CookieJar()
+        self.rssuid = ''
+        self.rsshash = ''
+        self.rsslink = ''
         self.url = 'http://www.torrentday.com/'
         self.downloadUrl = 'http://www.torrentday.com/download.php/'
         self.token = None
@@ -122,6 +125,9 @@ class TorrentDayProvider(generic.TorrentProvider):
             
             cookie = cookielib.CookieJar()
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
+            
+            
+            
             login_data = urllib.urlencode({'username' : username, 'password' : password, 'submit.x': 0, 'submit.y': 0})
             res = opener.open('http://www.torrentday.com/torrents/', login_data)      
             
@@ -139,6 +145,23 @@ class TorrentDayProvider(generic.TorrentProvider):
                     success = True
                     logger.log("TorrentDay session: {0}".format(self.token))
                     logger.log("TorrentDay successfully logged user '{0}' in.".format(sickbeard.TORRENTDAY_USERNAME))
+
+                    logger.log("Detecting RSS Feed for user '{0}'.".format(sickbeard.TORRENTDAY_USERNAME))
+                    rss_data = 'cat%5B%5D=24&cat%5B%5D=14&cat%5B%5D=7&cat%5B%5D=2&feed=direct&login=passkey'
+                    rss_res = opener.open('http://www.torrentday.com/rss.php', rss_data)
+                    
+                    try:
+                        tag = BeautifulSoup(rss_res, 'html5lib').body.input
+                        rss_link = str(tag.attrs[u'value'])
+                        reRSS = re.compile(r'u=(.*);tp=([0-9A-Fa-f]{32})', re.IGNORECASE|re.DOTALL)
+                        logger.log('RSS Url: {0}'.format(rss_link), logger.DEBUG)
+                        uidhash = reRSS.findall(rss_link)
+                        self.rsslink = rss_link
+                        self.rssuid = uidhash[0][0]
+                        self.rsshash = uidhash[0][1]
+                        print 
+                    except AttributeError:
+                        logger.log("Unable to get RSS Link... ?".format(sickbeard.TORRENTDAY_USERNAME), logger.ERROR)
             if not success:
                 logger.log("TorrentDay failed to log user '{0}' in. Incorrect Password?".format(sickbeard.TORRENTDAY_USERNAME), logger.ERROR)
                     
@@ -156,8 +179,8 @@ class TorrentDayProvider(generic.TorrentProvider):
             try:
                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
                 search_data = data
-                #result = opener.open(url, search_data)
-                result = opener.open('http://www.torrentday.com/V3/API/API.php', search_data)
+                result = opener.open(url, search_data)
+                #result = opener.open('http://www.torrentday.com/V3/API/API.php', search_data)
                 html = result.read()               
                 
                 
@@ -228,9 +251,10 @@ class TorrentDayProvider(generic.TorrentProvider):
             else:
                 numpages = 1
                 pass
+            logger.log("Number of pages: {0}.".format(numpages), logger.DEBUG)
             
             for tor in torrents:
-                results.append(([tor['name'],self.downloadUrl + '{0}/{1}?torrent_pass={2}'.format(tor['id'],tor['fname'],sickbeard.TORRENTDAY_RSSHASH)]))
+                results.append(([tor['name'],self.downloadUrl + '{0}/{1}?torrent_pass={2}'.format(tor['id'],tor['fname'],self.rsshash)]))
                 logger.log('Parser found: {0}'.format(tor['name']))   
         except AttributeError, e: 
             logger.log("No results found", logger.DEBUG)
@@ -245,12 +269,12 @@ class TorrentDayCache(tvcache.TVCache):
     def __init__(self, provider):
         
         tvcache.TVCache.__init__(self, provider)
-        
+        self.provider = provider
         self.minTime = 20
 
         
     def _getRSSData(self):
-        self.url = 'http://www.torrentday.com/torrents/rss?download;l26;l7;l24;l2;u={0};tp={1}'.format(sickbeard.TORRENTDAY_UID, sickbeard.TORRENTDAY_RSSHASH)
+        self.url = self.provider.rsslink
         logger.log(u'RSS url:{0}'.format(self.url))
         xml = helpers.getURL(self.url)
         return xml
