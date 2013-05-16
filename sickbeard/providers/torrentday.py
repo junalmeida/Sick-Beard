@@ -15,7 +15,7 @@ from sickbeard.common import Overview
 
 import traceback
 
-from lib.bs4 import BeautifulSoup
+from bs4 import BeautifulSoup
 import urllib, urllib2, cookielib
 import re, json, socket,datetime
 
@@ -151,7 +151,7 @@ class TorrentDayProvider(generic.TorrentProvider):
                     rss_res = opener.open('http://www.torrentday.com/rss.php', rss_data)
                     
                     try:
-                        tag = BeautifulSoup(rss_res).body.input
+                        tag = BeautifulSoup(rss_res, 'html5lib').body.input
                         rss_link = str(tag.attrs[u'value'])
                         reRSS = re.compile(r'u=(.*);tp=([0-9A-Fa-f]{32})', re.IGNORECASE|re.DOTALL)
                         logger.log('RSS Url: {0}'.format(rss_link), logger.DEBUG)
