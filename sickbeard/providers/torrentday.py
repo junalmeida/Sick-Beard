@@ -151,7 +151,7 @@ class TorrentDayProvider(generic.TorrentProvider):
                     rss_res = opener.open('http://www.torrentday.com/rss.php', rss_data)
                     
                     try:
-                        tag = BeautifulSoup(rss_res).body.input
+                        tag = BeautifulSoup(rss_res, "html5lib").body.input
                         rss_link = str(tag.attrs[u'value'])
                         reRSS = re.compile(r'u=(.*);tp=([0-9A-Fa-f]{32})', re.IGNORECASE|re.DOTALL)
                         logger.log('RSS Url: {0}'.format(rss_link), logger.DEBUG)

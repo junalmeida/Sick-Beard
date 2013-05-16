@@ -1,7 +1,7 @@
 from collections import defaultdict
 import itertools
 import sys
-from lib.bs4.element import (
+from bs4.element import (
     CharsetMetaAttributeValue,
     ContentMetaAttributeValue,
     whitespace_re
@@ -157,16 +157,7 @@ class TreeBuilder(object):
                     # value is a whitespace-separated list of CSS
                     # classes. Split it into a list.
                     value = attrs[cdata_list_attr]
-                    if isinstance(value, basestring):
-                        values = whitespace_re.split(value)
-                    else:
-                        # html5lib sometimes calls setAttributes twice
-                        # for the same tag when rearranging the parse
-                        # tree. On the second call the attribute value
-                        # here is already a list.  If this happens,
-                        # leave the value alone rather than trying to
-                        # split it again.
-                        values = value
+                    values = whitespace_re.split(value)
                     attrs[cdata_list_attr] = values
         return attrs
 
@@ -286,7 +277,7 @@ class HTMLTreeBuilder(TreeBuilder):
 def register_treebuilders_from(module):
     """Copy TreeBuilders from the given module into this module."""
     # I'm fairly sure this is not the best way to do this.
-    this_module = sys.modules['lib.bs4.builder']
+    this_module = sys.modules['bs4.builder']
     for name in module.__all__:
         obj = getattr(module, name)
 
@@ -300,7 +291,7 @@ def register_treebuilders_from(module):
 # builder registrations will take precedence. In general, we want lxml
 # to take precedence over html5lib, because it's faster. And we only
 # want to use HTMLParser as a last result.
-import _htmlparser  
+from . import _htmlparser
 register_treebuilders_from(_htmlparser)
 try:
     from . import _html5lib
