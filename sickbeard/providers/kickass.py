@@ -42,7 +42,7 @@ class KICKASSProvider(generic.TorrentProvider):
 
         self.cache = KICKASSCache(self)
 
-        self.url = 'http://kat.ph/'
+        self.url = 'http://kickass.to/'
 
     def isEnabled(self):
         return sickbeard.KICKASS
