@@ -250,7 +250,7 @@ class TorrentLeechCache(tvcache.TVCache):
                 "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
         
         for title, url in data:
-	xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ quote(url,'/,:') + "</link>" + "</item>"
+	xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ urllib.quote(url,'/,:') + "</link>" + "</item>"
         xml += "</channel> </rss>"
         return xml
     
