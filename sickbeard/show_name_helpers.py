@@ -100,6 +100,9 @@ def sceneToNormalShowNames(name):
         # add brackets around the country
         country_match_str = '|'.join(countryList.values())
         results.append(re.sub('(?i)([. _-])('+country_match_str+')$', '\\1(\\2)', cur_name))
+        
+        # remove the year
+        results.append(re.sub('(\D)(\d{4})$', '', cur_name))
 
     results += name_list
 
