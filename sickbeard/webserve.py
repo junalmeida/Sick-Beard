@@ -1112,6 +1112,8 @@ class ConfigProviders:
                 sickbeard.BITHDTV = curEnabled
             elif curProvider == 'fucklimits':
                 sickbeard.FUCKLIMITS = curEnabled
+            elif curProvider == 'btdigg':
+                sickbeard.BTDIGG = curEnabled
             elif curProvider == 'publichd':
                 sickbeard.PUBLICHD = curEnabled
             elif curProvider == 'btn':
