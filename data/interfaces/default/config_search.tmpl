@@ -367,6 +367,17 @@
                                     <span class="component-desc">Don't start downloading when torrent is added?</span>
                                 </label>
                             </div>
+
+                            <div class="field-pair">
+                                <label class="nocheck clearfix">
+                                    <span class="component-title" id="torrent_paused_desc">Download torrents to show directory</span>
+                                    <input type="checkbox" name="torrent_show_path" class="enabler" id="torrent_show_path" #if $sickbeard.TORRENT_SHOW_PATH == True then "checked=\"checked\"" else ""# />
+                                </label>
+                                <label class="nocheck clearfix">
+                                    <span class="component-title">&nbsp;</span>
+                                    <span class="component-desc">Download torrent to corresponding show directory.</span>
+                                </label>
+                            </div>
                             <div class="testNotification" id="testTorrent-result">Click below to test.</div>
                         	<input type="button" value="Test Connection" id="testTorrent" class="btn config_submitter"/>
                         	<input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
