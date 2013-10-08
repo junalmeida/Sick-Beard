@@ -790,6 +790,7 @@ class ConfigSearch:
         sickbeard.USE_TORRENTS = 1 if postData.get('use_torrents') == "on" else 0
         sickbeard.USE_NZBS = 1 if postData.get('use_nzbs') == "on" else 0
         sickbeard.TORRENT_PAUSED = 1 if postData.get('torrent_paused') == "on" else 0
+        sickbeard.TORRENT_SHOW_PATH = 1 if postData.get('torrent_show_path') == "on" else 0
         sickbeard.DOWLOAD_PROPERS = 1 if postData.get('download_propers') == "on" else 0
         sickbeard.PREFER_EPISODE_RELEASES = 1 if postData.get('prefer_episode_releases') == "on" else 0
         sickbeard.USENET_RETENTION = int(postData.get('usenet_retention', 200))
@@ -1013,6 +1014,7 @@ class ConfigProviders:
     def saveProviders(self, nzbmatrix_username=None, nzbmatrix_apikey=None,
                       nzbs_r_us_uid=None, nzbs_r_us_hash=None, newznab_string='',
                       omgwtfnzbs_uid=None, omgwtfnzbs_key=None,
+                      hdbits_username=None, hdbits_passkey=None,
                       tvtorrents_digest=None, tvtorrents_hash=None,
                       torrentleech_key=None,
                       btn_api_key=None,
@@ -1097,6 +1099,8 @@ class ConfigProviders:
                 sickbeard.TORRENTZ = curEnabled
             elif curProvider == 'thepiratebay':
                 sickbeard.THEPIRATEBAY = curEnabled 
+            elif curProvider == 'hdbits':
+                sickbeard.HDBITS= curEnabled
             elif curProvider == 'tvtorrents':
                 sickbeard.TVTORRENTS = curEnabled
             elif curProvider == 'dailytvtorrents':
@@ -1125,6 +1129,9 @@ class ConfigProviders:
                 newznabProviderDict[curProvider].enabled = bool(curEnabled)
             else:
                 logger.log(u"don't know what " + curProvider + " is, skipping")
+
+        sickbeard.HDBITS_USERNAME = hdbits_username.strip()
+        sickbeard.HDBITS_PASSKEY = hdbits_passkey.strip()
 
         sickbeard.TVTORRENTS_DIGEST = tvtorrents_digest.strip()
         sickbeard.TVTORRENTS_HASH = tvtorrents_hash.strip()
