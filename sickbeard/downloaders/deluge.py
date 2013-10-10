@@ -19,6 +19,7 @@
 import urllib, urllib2, cookielib, StringIO, gzip
 import httplib
 import re
+import os
 
 try:
     import json
@@ -32,7 +33,7 @@ from urlparse import urlparse
 
 RPC_URL = "json"
 
-def _makeOpener(host, username, password):  
+def _makeOpener(host, username, password):
     auth_handler = urllib2.HTTPBasicAuthHandler()
     auth_handler.add_password(realm='deluge',
                               uri=host,
@@ -46,8 +47,8 @@ def _makeOpener(host, username, password):
 
     handlers = [auth_handler, cookie_handler]
     deluge_request = urllib2.build_opener(*handlers)
-    
-    headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-type': 'application/json', 'Accept-encoding': 'gzip'}    
+
+    headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-type': 'application/json', 'Accept-encoding': 'gzip'}
     post_data = json.dumps({"method": "auth.login",
                             "params": [password],
                             "id": 1
@@ -64,14 +65,14 @@ def _makeOpener(host, username, password):
         raise Exception("Deluge unauthorized. Check your password.")
 
     return deluge_request
-    
+
 def _request(data):
     host = sickbeard.TORRENT_HOST
     if not host.endswith("/"):
         host += "/"
     host += RPC_URL
     password = sickbeard.TORRENT_PASSWORD
-    
+
     opener = _makeOpener(host, None, password)
 
     post_data = json.dumps(data)
@@ -81,29 +82,36 @@ def _request(data):
     jsonObject = json.loads(result_data.read())
     return jsonObject
 
-    
-def sendTORRENT(torrent):    
+
+def sendTORRENT(torrent):
     result = None
     try:
         ratio = sickbeard.TORRENT_RATIO
         paused = sickbeard.TORRENT_PAUSED
-        download_dir = sickbeard.TV_DOWNLOAD_DIR
+        if(sickbeard.TORRENT_SHOW_PATH):
+            download_dir = torrent.path
+            try:
+                os.makedirs(download_dir)
+            except:
+                pass
+        else:
+            download_dir = sickbeard.TV_DOWNLOAD_DIR
         cookie = torrent.provider.token
-        
+
         options = {}
         headers = {}
         if cookie:
             headers['Cookie'] = cookie
-            
-       
+
+
         post_data = {"method": "core.add_torrent_url",
                      "params": [torrent.url,
                                 options,
                                 headers],
-                     
+
                      "id": 2
                     }
-        
+
         result = _request(post_data)
         if result and not result["error"]:
             hash = result["result"]
@@ -117,7 +125,7 @@ def sendTORRENT(torrent):
                 post_data = {"method": "core.set_torrent_move_completed",
                              "params": [hash, True],
                              "id": 3
-                            }        
+                            }
                 result = _request(post_data)
                 post_data = {"method": "core.set_torrent_move_completed_path",
                              "params": [hash, download_dir],
@@ -128,12 +136,12 @@ def sendTORRENT(torrent):
                 post_data = {"method": "core.set_torrent_stop_at_ratio",
                              "params": [hash, True],
                              "id": 6
-                            }        
+                            }
                 result = _request(post_data)
                 post_data = {"method": "core.set_torrent_stop_ratio",
                              "params": [hash,float(ratio)],
                              "id": 7
-                            }     
+                            }
                 result = _request(post_data)
             logger.log('Torrent added to deluge successfully.', logger.DEBUG)
             return True
@@ -143,22 +151,22 @@ def sendTORRENT(torrent):
     except Exception, e:
         logger.log("Deluge error: " + str(e) + "\r\n" + str(result), logger.ERROR)
         return False
-        
-    
+
+
 def testAuthentication(host, username, password):
     if not host.endswith("/"):
         host += "/"
     host += RPC_URL
-    try:    
+    try:
         opener = _makeOpener(host, username, password)
-        
+
         headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-type': 'application/json', 'Accept-encoding': 'gzip'}
         post_data = json.dumps({"method": "auth.login",
                                 "params": [password],
                                 "id": 1
                                 })
         request = urllib2.Request(host, post_data, headers)
-    
+
 
         response = opener.open(request)
         data = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))

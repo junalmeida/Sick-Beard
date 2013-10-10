@@ -19,6 +19,7 @@
 import urllib2
 import httplib
 import re
+import os
 
 try:
     import json
@@ -111,7 +112,14 @@ class TransmissionRPC(object):
 
 def sendTORRENT(torrent):
 
-    path = sickbeard.TORRENT_PATH
+    if(sickbeard.TORRENT_SHOW_PATH):
+        path = torrent.path
+        try:
+            os.makedirs(path)
+        except:
+            pass
+    else:
+        path = sickbeard.TORRENT_PATH
     ratio = sickbeard.TORRENT_RATIO
     paused = sickbeard.TORRENT_PAUSED
     log = "Torrent will be added with path:" + path + ", ratio: " + ratio + "and paused = " +  str(paused)
@@ -138,16 +146,16 @@ def sendTORRENT(torrent):
 
     if not (path == ''):
         params['download-dir'] = path
-    
+
     #check for cookies
     if torrent.provider.token:
         params['cookies'] = torrent.provider.token
-        
+
     try:
         tc = TransmissionRPC(host.hostname, host.port, sickbeard.TORRENT_USERNAME, sickbeard.TORRENT_PASSWORD)
         torrent = tc.add_torrent(torrent.url, arguments=params)
         tc.set_torrent(torrent["torrent-added"]["hashString"], change_params)
-        
+
         return True
     except Exception, e:
         logger.log("Unknown failure sending Torrent to Transmission. Return text is: " + str(e), logger.ERROR)
@@ -164,4 +172,4 @@ def testAuthentication(host, username, password):
         tc = TransmissionRPC(host.hostname, host.port, username, password)
         return True, u"Success: Connected and Authenticated. RPC version: " + str(tc.session["rpc-version"])
     except Exception, e:
-       return False, u"Error: Unable to connect to Transmission" 
+       return False, u"Error: Unable to connect to Transmission"

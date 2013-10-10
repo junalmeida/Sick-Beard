@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import time
 import datetime
 import sqlite3
@@ -27,6 +28,7 @@ from sickbeard import logger
 from sickbeard.common import Quality
 
 from sickbeard import helpers, exceptions, show_name_helpers
+from sickbeard import encodingKludge as ek
 from sickbeard import name_cache
 from sickbeard.exceptions import ex
 
@@ -232,7 +234,7 @@ class TVCache():
                 # check the name cache and see if we already know what show this is
                 logger.log(u"Checking the cache to see if we already know the tvdb id of "+parse_result.series_name, logger.DEBUG)
                 tvdb_id = name_cache.retrieveNameFromCache(parse_result.series_name)
-                
+
                 # remember if the cache lookup worked or not so we know whether we should bother updating it later
                 if tvdb_id == None:
                     logger.log(u"No cache results returned, continuing on with the search", logger.DEBUG)
@@ -240,7 +242,7 @@ class TVCache():
                 else:
                     logger.log(u"Cache lookup found "+repr(tvdb_id)+", using that", logger.DEBUG)
                     from_cache = True
-                
+
                 # if the cache failed, try looking up the show name in the database
                 if tvdb_id == None:
                     logger.log(u"Trying to look the show up in the show database", logger.DEBUG)
@@ -259,7 +261,7 @@ class TVCache():
                             tvdb_lang = curShow.lang
                             break
 
-                # if tvdb_id was anything but None (0 or a number) then 
+                # if tvdb_id was anything but None (0 or a number) then
                 if not from_cache:
                     name_cache.addNameToCache(parse_result.series_name, tvdb_id)
 
@@ -385,6 +387,7 @@ class TVCache():
                 result.url = url
                 result.name = title
                 result.quality = curQuality
+                result.path = ek.ek(os.path.join, epObj.show.location, epObj.formatted_dir())
 
                 # add it to the list
                 if epObj not in neededEps:

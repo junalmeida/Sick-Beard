@@ -52,6 +52,7 @@ class GenericProvider:
         self.supportsBacklog = False
 
         self.cache = tvcache.TVCache(self)
+        self.path = ''
 
     def getID(self):
         return GenericProvider.makeID(self.name)
@@ -270,6 +271,7 @@ class GenericProvider:
             result.url = url
             result.name = title
             result.quality = quality
+            result.path = ek.ek(os.path.join, episode.show.location, episode.formatted_dir())
 
             results.append(result)
 

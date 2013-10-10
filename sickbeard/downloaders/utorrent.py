@@ -196,7 +196,10 @@ def sendTORRENT(result):
     success, new_result = _action(url, sickbeard.TORRENT_HOST, sickbeard.TORRENT_USERNAME, sickbeard.TORRENT_PASSWORD)
 
     torrent_hash = _findTorrentHash(result.url)
-    torrent_label = sickbeard.TORRENT_PATH.replace("/", "_").replace("\\", "_")
+    if(sickbeard.TORRENT_SHOW_PATH):
+        torrent_label = torrent.path.replace("/", "_").replace("\\", "_")
+    else:
+        torrent_label = sickbeard.TORRENT_PATH.replace("/", "_").replace("\\", "_")
 
     if torrent_hash and torrent_label:
         url = '&action=setprops&s=label&hash=' + torrent_hash +'&v=' + quote(torrent_label) + '&t=' + str(int(time.time()))
