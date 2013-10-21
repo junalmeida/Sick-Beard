@@ -123,8 +123,9 @@ class ThePirateBayProvider(generic.TorrentProvider):
                         search_string.append(ep_string)
                 else:
                     for show_name in set(show_name_helpers.allPossibleShowNames(show)):
-                        ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ sickbeard.config.naming_ep_type[2] % {'seasonnumber': season, 'episodenumber': int(sqlEp["episode"])}
-                        search_string.append(ep_string)                       
+                        for ep_naming_type in sickbeard.config.naming_ep_type:                        
+                            ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ ep_naming_type % {'seasonnumber': season, 'episodenumber': int(sqlEp["episode"])}
+                            search_string.append(ep_string)                          
         
         return search_string
 
@@ -141,9 +142,11 @@ class ThePirateBayProvider(generic.TorrentProvider):
                 ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ str(ep_obj.airdate).replace('-', '.')
                 search_string.append(ep_string)
         else:
-            for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
-                ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ sickbeard.config.naming_ep_type[2] % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
-                search_string.append(ep_string)
+            for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):            
+                for ep_naming_type in sickbeard.config.naming_ep_type:                        
+                    ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ ep_naming_type % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
+                    search_string.append(ep_string)     
+                
     
         return search_string
 
