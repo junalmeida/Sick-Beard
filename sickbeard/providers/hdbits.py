@@ -26,8 +26,7 @@ import generic
 import sickbeard
 
 from sickbeard import logger, tvcache, exceptions
-from sickbeard.name_parser.parser import NameParser, InvalidNameException
-from sickbeard.common import Quality, USER_AGENT
+from sickbeard.common import USER_AGENT
 from sickbeard.exceptions import ex
 
 try:
@@ -42,73 +41,32 @@ class HDBitsProvider(generic.TorrentProvider):
 
         generic.TorrentProvider.__init__(self, "HDBits")
 
-        self.supportsBacklog = False
+        self.supportsBacklog = True
 
         self.cache = HDBitsCache(self)
 
         self.url = 'https://hdbits.org'
         self.search_url = 'https://hdbits.org/api/torrents'
-        self.rss_url = 'https://hdbits.org/api/torrents'
+        self.rss_url = self.search_url
         self.dl_url = 'http://hdbits.org/download.php?'
 
     def isEnabled(self):
         return sickbeard.HDBITS
 
-    def findEpisode(self, episode, manualSearch=False):
+    def imageName(self):
+        return 'hdbits.png'
 
-        logger.log(u"Searching " + self.name + " for " + episode.prettyName())
+    def _get_episode_search_strings(self, episode):
+        return [ self._make_JSON(show=episode.show, episode=episode) ]
 
-        self.cache.updateCache()
-        results = self.cache.searchCache(episode, manualSearch)
-        logger.log(u"Cache results: " + str(results), logger.DEBUG)
 
-        # if we got some results then use them no matter what.
-        # OR
-        # return anyway unless we're doing a manual search
-        if results or not manualSearch:
-            return results
+    def _get_season_search_strings(self, show, season):
+        return  [ self._make_JSON(show=show, season=season) ]
 
-        response = json.loads(
-            self.getURL(self.search_url, self._make_JSON(show=episode.show, episode=episode)))
 
-        itemList = response['data']
-
-        for item in itemList:
-
-            (title, url) = self._get_title_and_url(item)
-
-            # parse the file name
-            try:
-                myParser = NameParser()
-                parse_result = myParser.parse(title)
-            except InvalidNameException:
-                logger.log(u"Unable to parse the filename " + title + " into a valid episode", logger.WARNING)
-                continue
-
-            if episode.show.air_by_date:
-                if parse_result.air_date != episode.airdate:
-                    logger.log("Episode " + title + " didn't air on " + str(episode.airdate) + ", skipping it", logger.DEBUG)
-                    continue
-            elif parse_result.season_number != episode.season or episode.episode not in parse_result.episode_numbers:
-                logger.log("Episode " + title + " isn't " + str(episode.season) + "x" + str(episode.episode) + ", skipping it", logger.DEBUG)
-                continue
-
-            quality = self.getQuality(item)
-
-            if not episode.show.wantEpisode(episode.season, episode.episode, quality, manualSearch):
-                logger.log(u"Ignoring result " + title + " because we don't want an episode that is " + Quality.qualityStrings[quality], logger.DEBUG)
-                continue
-
-            logger.log(u"Found result " + title + " at " + url, logger.DEBUG)
-
-            result = self.getResult([episode])
-            result.url = url
-            result.name = title
-            result.quality = quality
-
-            results.append(result)
-
-        return results
+    def _doSearch(self, search_params, show=None):
+        response = json.loads(self.getJSON(url=self.search_url, json=search_params))['data']
+        return response
 
     def _get_title_and_url(self, item):
         return (item['name'], self._make_download_url(item))
@@ -140,9 +98,11 @@ class HDBitsProvider(generic.TorrentProvider):
 
         return json.dumps(body)
 
-    def getURL(self, url=None, json=None):
+
+    def getJSON(self, url=None, json=None):
         """
         Returns a byte-string retrieved from the url provider.
+        Needed here to support json POST.
         """
 
         opener = urllib2.build_opener()
@@ -160,10 +120,8 @@ class HDBitsProvider(generic.TorrentProvider):
                 else:
                     data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
                 result = data.read()
-
             else:
                 result = usock.read()
-
             usock.close()
 
         except urllib2.HTTPError, e:
@@ -186,7 +144,6 @@ class HDBitsProvider(generic.TorrentProvider):
             return None
 
         return result
-
 
 class HDBitsCache(tvcache.TVCache):
 
@@ -235,7 +192,7 @@ class HDBitsCache(tvcache.TVCache):
         url = self.provider._make_download_url(item)
 
         if not title or not url:
-            logger.log(u"The XML returned from the " + self.provider.name + " feed is incomplete, this result is unusable", logger.ERROR)
+            logger.log(u"The JSON returned from the " + self.provider.name + " feed is incomplete, this result is unusable", logger.ERROR)
             return
 
         logger.log(u"Adding item from RSS to cache: " + title, logger.DEBUG)
@@ -243,6 +200,6 @@ class HDBitsCache(tvcache.TVCache):
         self._addCacheEntry(title, url)
 
     def _getRSSData(self):
-        return self.provider.getURL(self.provider.rss_url, self.provider._make_JSON())
+        return self.provider.getJSON(url=self.provider.search_url, json=self.provider._make_JSON())
 
 provider = HDBitsProvider()
