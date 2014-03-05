@@ -154,8 +154,12 @@ def _findTorrentHash(url):
             myParser = NameParser()
             parse_result = myParser.parse(name)
         except:
-            logger.log(u"Unable to parse the filename " + name + " into a valid episode", logger.WARNING)
-            return False
+            if re.match("^[0-9A-Fa-f]{40}$", name):
+                logger.log(u"Filename " + name + " appears to be a hash", logger.DEBUG)
+                return name
+            else:
+                logger.log(u"Unable to parse the filename " + name + " into a valid episode", logger.WARNING)
+                return False
         
         success, torrent_list = _action('&list=1', sickbeard.TORRENT_HOST, sickbeard.TORRENT_USERNAME, sickbeard.TORRENT_PASSWORD)
         
