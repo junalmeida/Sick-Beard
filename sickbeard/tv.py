@@ -1190,9 +1190,12 @@ class TVEpisode(object):
             elif self.airdate == datetime.date.fromordinal(1):
                 if self.status == IGNORED:
                     logger.log(u"Episode has no air date, but it's already marked as ignored", logger.DEBUG)
+                elif str(self.season) == "0":
+                    logger.log(u"Special episode has no air date, automatically marking it skipped", logger.DEBUG)
+                    self.status = SKIPPED
                 else:
                     logger.log(u"Episode has no air date, automatically marking it skipped", logger.DEBUG)
-                    self.status = SKIPPED
+                    self.status = UNAIRED
             # if we don't have the file and the airdate is in the past
             else:
                 if self.status == UNAIRED:
