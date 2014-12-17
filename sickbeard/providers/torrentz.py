@@ -22,6 +22,7 @@ import traceback
 import urllib
 import urllib2
 import re
+import datetime
 
 import xml.etree.cElementTree as etree
 
@@ -33,6 +34,8 @@ from sickbeard.common import *
 from sickbeard import logger, helpers
 from sickbeard import tvcache
 from sickbeard.helpers import sanitizeSceneName
+from sickbeard import db , show_name_helpers
+
 
 class TORRENTZProvider(generic.TorrentProvider):
 
@@ -51,59 +54,71 @@ class TORRENTZProvider(generic.TorrentProvider):
         
     def imageName(self):
         return 'torrentz.png'
-                      
-    def _get_season_search_strings(self, show, season=None):
     
-        params = {}
+    def _get_airbydate_season_range(self, season):        
+        if season == None:
+            return ()        
+        year, month = map(int, season.split('-'))
+        min_date = datetime.date(year, month, 1)
+        if month == 12:
+            max_date = datetime.date(year, month, 31)
+        else:    
+            max_date = datetime.date(year, month+1, 1) -  datetime.timedelta(days=1)
+        return (min_date, max_date)    
+    
+    def _get_season_search_strings(self, show, season=None):
+        search_string = []
     
         if not show:
-            return params
-
-        params['show_name'] = self._sanitizeNameToSearch(show.name)
-          
-        if season != None:
-            params['season'] = season
-    
-        return [params]    
-    
-    def _get_episode_search_strings(self, ep_obj):
-    
-        params = {}
+            return []
+      
+        myDB = db.DBConnection()
         
-        if not ep_obj:
-            return params
-                   
-        params['show_name'] = self._sanitizeNameToSearch(ep_obj.show.name)
-        
-        if ep_obj.show.air_by_date:
-            params['date'] = str(ep_obj.airdate)
+        if show.air_by_date:
+            (min_date, max_date) = self._get_airbydate_season_range(season)
+            sqlResults = myDB.select("SELECT * FROM tv_episodes WHERE showid = ? AND airdate >= ? AND airdate <= ?", [show.tvdbid,  min_date.toordinal(), max_date.toordinal()])
         else:
-            params['season'] = ep_obj.season
-            params['episode'] = ep_obj.episode
-    
-        return [params]
+            sqlResults = myDB.select("SELECT * FROM tv_episodes WHERE showid = ? AND season = ?", [show.tvdbid, season])
+            
+        for sqlEp in sqlResults:
+            if show.getOverview(int(sqlEp["status"])) in (Overview.WANTED, Overview.QUAL):
+                if show.air_by_date:
+                    for show_name in set(show_name_helpers.allPossibleShowNames(show)):
+                        ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ str(datetime.date.fromordinal(sqlEp["airdate"])).replace('-', '.')
+                        search_string.append(ep_string)
+                else:
+                    for show_name in set(show_name_helpers.allPossibleShowNames(show)):
+                        ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ sickbeard.config.naming_ep_type[2] % {'seasonnumber': season, 'episodenumber': int(sqlEp["episode"])}
+                        search_string.append(ep_string)                       
+        return search_string
 
+    def _get_episode_search_strings(self, ep_obj):    
+        search_string = []
+       
+        if not ep_obj:
+            return []
+        if ep_obj.show.air_by_date:
+            for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
+                ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ str(ep_obj.airdate).replace('-', '.')
+                search_string.append(ep_string)
+        else:
+            for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
+                ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ sickbeard.config.naming_ep_type[2] % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
+                search_string.append(ep_string)
+        return search_string           
+        
     def _sanitizeNameToSearch(self, text):
         #text = re.sub(r'\([^)]*\)', '', text)
         return sanitizeSceneName(text, ezrss=True).replace('.',' ').replace('-',' ').encode('utf-8')
         
     def _doSearch(self, search_params, show=None):
         try:
-            params = { }
-        
-            if search_params:
-                params.update(search_params)
-
+            results = []
             
             if sickbeard.TORRENTZ_VERIFIED:
-                params.update({"baseurl" : "feed_verifiedP"})
+                searchURL = self.url + "feed_verifiedP?q=" + search_params
             else:
-                params.update({"baseurl" : "feed"})
-
-            if not 'episode' in params:
-                searchURL = self.url + "%(baseurl)s?q=%(show_name)s S%(season)02d" % params
-            else:
-                searchURL = self.url + "%(baseurl)s?q=%(show_name)s S%(season)02dE%(episode)02d" % params
+                searchURL = self.url + "feed?q=" + search_params
                 
             searchURL = searchURL.replace(" ", "+")
             
@@ -186,7 +201,7 @@ class TORRENTZCache(tvcache.TVCache):
             params.update({"baseurl" : "feed_verified"})
         else:
             params.update({"baseurl" : "feedA"})
-        url = self.provider.url + '%(baseurl)s?q=' % params
+        url = self.provider.url + '%(baseurl)s?q=tv' % params
                
         logger.log(self.provider.name + u" cache update URL: " + url)
 
