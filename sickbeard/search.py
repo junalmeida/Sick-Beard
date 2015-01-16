@@ -41,6 +41,7 @@ from sickbeard.providers.generic import GenericProvider
 
 
 import urllib2
+import ssl
 
 def _downloadResult(result):
     """
@@ -125,7 +126,7 @@ def snatchEpisode(result, endStatus=SNATCHED):
             allUrls = result.url.split(";", 3)
             for url in allUrls:
                 try:
-                    urllib2.urlopen(url)
+                    urllib2.urlopen(url, context=ssl._create_unverified_context())
                     result.url = url
                     break
                 except Exception:

@@ -18,6 +18,7 @@
 
 import urllib
 import urllib2
+import ssl
 import socket
 import base64
 import time
@@ -196,7 +197,7 @@ class XBMCNotifier:
             else:
                 logger.log(u"Contacting XBMC via url: " + fixStupidEncodings(url), logger.DEBUG)
 
-            response = urllib2.urlopen(req)
+            response = urllib2.urlopen(req, context=ssl._create_unverified_context())
             result = response.read().decode(sickbeard.SYS_ENCODING)
             response.close()
 
@@ -337,7 +338,7 @@ class XBMCNotifier:
                 logger.log(u"Contacting XBMC via url: " + fixStupidEncodings(url), logger.DEBUG)
 
             try:
-                response = urllib2.urlopen(req)
+                response = urllib2.urlopen(req, context=ssl._create_unverified_context())
             except urllib2.URLError, e:
                 logger.log(u"Error while trying to retrieve XBMC API version for " + host + ": " + ex(e), logger.WARNING)
                 return False

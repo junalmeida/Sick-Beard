@@ -18,6 +18,7 @@
 
 
 import sys
+import ssl
 import urllib
 import os.path
 import ConfigParser
@@ -27,7 +28,7 @@ class AuthURLOpener(urllib.FancyURLopener):
         self.username = user
         self.password = pw
         self.numTries = 0
-        urllib.FancyURLopener.__init__(self)
+        urllib.FancyURLopener.__init__(self, context=ssl._create_unverified_context())
     
     def prompt_user_passwd(self, host, realm):
         if self.numTries == 0:

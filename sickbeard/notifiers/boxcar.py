@@ -18,6 +18,7 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib, urllib2
+import ssl
 import time
 
 import sickbeard
@@ -67,7 +68,7 @@ class BoxcarNotifier:
         # send the request to boxcar
         try:
             req = urllib2.Request(curUrl)
-            handle = urllib2.urlopen(req, data)
+            handle = urllib2.urlopen(req, data, context=ssl._create_unverified_context())
             handle.close()
             
         except urllib2.URLError, e:

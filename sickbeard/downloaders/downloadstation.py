@@ -17,6 +17,7 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib, urllib2
+import ssl
 import httplib
 
 try:
@@ -63,7 +64,7 @@ class DownloadStationAPI(object):
 		logger.log(u"Request destination: " + self.url + script, logger.DEBUG)
 		logger.log(u"Request: " + str(request), logger.DEBUG)
 		try:
-			open_request = urllib2.urlopen(request)
+			open_request = urllib2.urlopen(request, context=ssl._create_unverified_context())
 			response = json.loads(open_request.read())
 			logger.log('response: ' + str(json.dumps(response).encode('utf-8')), logger.DEBUG)
 			if response['success'] == False:

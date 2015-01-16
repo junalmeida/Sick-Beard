@@ -18,6 +18,7 @@
 
 import urllib
 import urllib2
+import ssl
 import base64
 
 import sickbeard
@@ -76,7 +77,7 @@ class PLEXNotifier:
             else:
                 logger.log(u"Contacting Plex via url: " + url, logger.DEBUG)
 
-            response = urllib2.urlopen(req)
+            response = urllib2.urlopen(req, context=ssl._create_unverified_context())
 
             result = response.read().decode(sickbeard.SYS_ENCODING)
             response.close()
@@ -164,7 +165,7 @@ class PLEXNotifier:
 
             url = "http://%s/library/sections" % sickbeard.PLEX_SERVER_HOST
             try:
-                xml_sections = minidom.parse(urllib.urlopen(url))
+                xml_sections = minidom.parse(urllib.urlopen(url, context=ssl._create_unverified_context()))
             except IOError, e:
                 logger.log(u"Error while trying to contact Plex Media Server: " + ex(e), logger.ERROR)
                 return False
@@ -178,7 +179,7 @@ class PLEXNotifier:
                 if s.getAttribute('type') == "show":
                     url = "http://%s/library/sections/%s/refresh" % (sickbeard.PLEX_SERVER_HOST, s.getAttribute('key'))
                     try:
-                        urllib.urlopen(url)
+                        urllib.urlopen(url, context=ssl._create_unverified_context())
                     except Exception, e:
                         logger.log(u"Error updating library section for Plex Media Server: " + ex(e), logger.ERROR)
                         return False

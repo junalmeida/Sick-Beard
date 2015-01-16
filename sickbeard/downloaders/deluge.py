@@ -17,6 +17,7 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib, urllib2, cookielib, StringIO, gzip
+import ssl
 import httplib
 import re
 
@@ -38,7 +39,7 @@ def _makeOpener(host, username, password):
                               uri=host,
                               user=username,
                               passwd=password)
-    opener = urllib2.build_opener(auth_handler)
+    opener = urllib2.build_opener(auth_handler, urllib2.HTTPSHandler(context=ssl._create_unverified_context()))
     urllib2.install_opener(opener)
 
     cookie_jar = cookielib.CookieJar()

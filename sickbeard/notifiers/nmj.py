@@ -17,6 +17,7 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib, urllib2
+import ssl
 import sickbeard
 import telnetlib
 import re
@@ -110,7 +111,7 @@ class NMJNotifier:
             try:
                 req = urllib2.Request(mount)
                 logger.log(u"Try to mount network drive via url: %s" % (mount), logger.DEBUG)
-                handle = urllib2.urlopen(req)
+                handle = urllib2.urlopen(req, context=ssl._create_unverified_context())
             except IOError, e:
                 logger.log(u"Warning: Couldn't contact popcorn hour on host %s: %s" % (host, e))
                 return False
@@ -129,7 +130,7 @@ class NMJNotifier:
         try:
             req = urllib2.Request(updateUrl)
             logger.log(u"Sending NMJ scan update command via url: %s" % (updateUrl), logger.DEBUG)
-            handle = urllib2.urlopen(req)
+            handle = urllib2.urlopen(req, context=ssl._create_unverified_context())
             response = handle.read()
         except IOError, e:
             logger.log(u"Warning: Couldn't contact Popcorn Hour on host %s: %s" % (host, e))

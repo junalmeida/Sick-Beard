@@ -20,6 +20,7 @@
 
 import re
 import urllib, urllib2, cookielib
+import ssl
 import sys
 import datetime
 import os
@@ -177,7 +178,7 @@ class BTDIGGProvider(generic.TorrentProvider):
         logger.log("[BTDigg] Requesting - " + url)
         try:
             #response = helpers.getURL(url, headers)
-            response = urllib.urlopen(url)
+            response = urllib.urlopen(url, context=ssl._create_unverified_context())
         except (urllib2.HTTPError, IOError, Exception), e:
             logger.log("[BTDigg] getURL() Error loading " + self.name + " URL: " + str(sys.exc_info()) + " - " + ex(e), logger.ERROR)
             return None
