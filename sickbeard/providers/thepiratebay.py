@@ -21,7 +21,8 @@
 ###################################################################################################
 
 import re
-import urllib, urllib2
+from urllib import quote, unquote
+from urllib2 import HTTPError
 import sys
 import datetime
 import os
@@ -150,7 +151,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
     ###################################################################################################
     def _doSearch(self, search_params, show=None):
         results = []
-        searchURL = self.proxy._buildURL(self.searchurl %(urllib.quote(search_params)))    
+        searchURL = self.proxy._buildURL(self.searchurl %(quote(search_params)))    
         logger.log(u"Search string: " + searchURL, logger.DEBUG)
                     
         data = self.getURL(searchURL)
@@ -160,7 +161,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
         re_title_url = self.proxy._buildRE(self.re_title_url)
         
         #Extracting torrent information from searchURL                   
-        match = re.compile(re_title_url, re.DOTALL ).finditer(urllib.unquote(data))
+        match = re.compile(re_title_url, re.DOTALL ).finditer(unquote(data))
         for torrent in match:
             #Accept Torrent only from Good People
             if sickbeard.THEPIRATEBAY_TRUSTED and re.search('(VIP|Trusted|Helpers)',torrent.group(0))== None:
@@ -193,7 +194,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
 
         try:
             result = helpers.getURL(url, headers=headers)
-        except (urllib2.HTTPError, IOError), e:
+        except (HTTPError, IOError), e:
             logger.log(u"Error loading "+self.name+" URL: " + str(sys.exc_info()) + " - " + ex(e), logger.ERROR)
             return None
 
@@ -242,7 +243,7 @@ class ThePirateBayCache(tvcache.TVCache):
         # now that we've loaded the current RSS feed lets delete the old cache
         logger.log(u"Clearing "+self.provider.name+" cache and updating with new information")
         self._clearCache()
-        match = re.compile(re_title_url, re.DOTALL).finditer(urllib.unquote(data))
+        match = re.compile(re_title_url, re.DOTALL).finditer(unquote(data))
         if not match:
             logger.log(u"The Data returned from the ThePirateBay is incomplete, this result is unusable", logger.ERROR)
             return []

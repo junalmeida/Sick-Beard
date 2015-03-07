@@ -18,14 +18,11 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
-import urllib
+from urllib import quote
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
 from xml.sax.saxutils import escape
@@ -42,13 +39,13 @@ class TorrentLeechProvider(generic.TorrentProvider):
 
     ###################################################################################################
     def __init__(self):
-	generic.TorrentProvider.__init__(self, "TorrentLeech")
-	self.cache = TorrentLeechCache(self)     
-	self.name = "TorrentLeech"
-	self.session = None
-	self.supportsBacklog = True
-	self.url = 'http://www.torrentleech.org/'
-	logger.log("[" + self.name + "] initializing...")
+        generic.TorrentProvider.__init__(self, "TorrentLeech")
+        self.cache = TorrentLeechCache(self)     
+        self.name = "TorrentLeech"
+        self.session = None
+        self.supportsBacklog = True
+        self.url = 'http://www.torrentleech.org/'
+        logger.log("[" + self.name + "] initializing...")
         
     ###################################################################################################
     
@@ -132,23 +129,23 @@ class TorrentLeechProvider(generic.TorrentProvider):
     ###################################################################################################
 
     def _doSearch(self, search_params, show=None):
-	logger.log("[" + self.name + "] Performing Search: {0}".format(search_params))
-	searchUrl = self.url + "torrents/browse/index/query/" + search_params.replace(':','') + "/categories/26,27,32"
-	return self.parseResults(searchUrl)
+        logger.log("[" + self.name + "] Performing Search: {0}".format(search_params))
+        searchUrl = self.url + "torrents/browse/index/query/" + search_params.replace(':','') + "/categories/26,27,32"
+        return self.parseResults(searchUrl)
     
     ##################################################################################################
     
     def parseResults(self, searchUrl):
-	data = self.getURL(searchUrl)
-	results = []
-	
-	if data:
+        data = self.getURL(searchUrl)
+        results = []        
+        
+        if data:
             logger.log("[" + self.name + "] parseResults() URL: " + searchUrl, logger.DEBUG)
-	    
-	    for torrent in re.compile('<span class="title"><a href="/torrent/\d+">(?P<title>.*?)</a>.*?<td class="quickdownload">\s+<a href="/(?P<url>.*?)">',re.MULTILINE|re.DOTALL).finditer(data):
-		item = (torrent.group('title').replace('.',' '), self.url + torrent.group('url'))
-                results.append(item)                        
-                logger.log("[" + self.name + "] parseResults() Title: " + torrent.group('title'), logger.DEBUG)
+            
+        for torrent in re.compile('<span class="title"><a href="/torrent/\d+">(?P<title>.*?)</a>.*?<td class="quickdownload">\s+<a href="/(?P<url>.*?)">',re.MULTILINE|re.DOTALL).finditer(data):
+            item = (torrent.group('title').replace('.',' '), self.url + torrent.group('url'))
+            results.append(item)                        
+            logger.log("[" + self.name + "] parseResults() Title: " + torrent.group('title'), logger.DEBUG)
             if len(results):
                 logger.log("[" + self.name + "] parseResults() Some results found.")
             else:
@@ -163,7 +160,7 @@ class TorrentLeechProvider(generic.TorrentProvider):
         response = None
         
         if not self.session:
-             if not self._doLogin():
+            if not self._doLogin():
                 return response
             
         if not headers:
@@ -216,24 +213,24 @@ class TorrentLeechCache(tvcache.TVCache):
         tvcache.TVCache.__init__(self, provider)
         # only poll TorrentLeech every 15 minutes max
         self.minTime = 15
-	
+
     ###################################################################################################
     
     def _getRSSData(self):
-	# TorrentLeech's RSS sucks.. its all or nothing... so manual reconstruction required for just tv sections...
-	xml = "<rss xmlns:atom=\"http://www.w3.org/2005/Atom\" version=\"2.0\">" + \
-	    "<channel>" + \
-	    "<title>" + provider.name + "</title>" + \
-	    "<link>" + provider.url + "</link>" + \
-	    "<description>torrent search</description>" + \
-	    "<language>en-us</language>" + \
-	    "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
-	
-	for title, url in provider._doSearch(""):
-	    xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ urllib.quote(url,'/,:') + "</link>" + "</item>"
-	xml += "</channel> </rss>"
-	return xml
-	
-	###################################################################################################
-	
+        # TorrentLeech's RSS sucks.. its all or nothing... so manual reconstruction required for just tv sections...
+        xml = "<rss xmlns:atom=\"http://www.w3.org/2005/Atom\" version=\"2.0\">" + \
+    	    "<channel>" + \
+    	    "<title>" + provider.name + "</title>" + \
+    	    "<link>" + provider.url + "</link>" + \
+    	    "<description>torrent search</description>" + \
+    	    "<language>en-us</language>" + \
+    	    "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
+
+        for title, url in provider._doSearch(""):
+            xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ quote(url,'/,:') + "</link>" + "</item>"
+            xml += "</channel> </rss>"
+            return xml
+
+    ###################################################################################################
+
 provider = TorrentLeechProvider()

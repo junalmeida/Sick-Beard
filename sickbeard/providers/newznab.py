@@ -16,16 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
+from urllib import urlencode
 import email.utils
 import datetime
 import re
 import os
-
-try:
-    import xml.etree.cElementTree as etree
-except ImportError:
-    import elementtree.ElementTree as etree
 
 import sickbeard
 import generic
@@ -37,7 +32,7 @@ from sickbeard import encodingKludge as ek
 
 from sickbeard import logger
 from sickbeard import tvcache
-from sickbeard.exceptions import ex, AuthException
+from sickbeard.exceptions import AuthException
 
 
 class NewznabProvider(generic.NZBProvider):
@@ -208,7 +203,7 @@ class NewznabProvider(generic.NZBProvider):
         if self.needs_auth and self.key:
             params['apikey'] = self.key
 
-        search_url = self.url + 'api?' + urllib.urlencode(params)
+        search_url = self.url + 'api?' + urlencode(params)
 
         logger.log(u"Search url: " + search_url, logger.DEBUG)
 
@@ -306,7 +301,7 @@ class NewznabCache(tvcache.TVCache):
         if self.provider.needs_auth and self.provider.key:
             params['apikey'] = self.provider.key
 
-        rss_url = self.provider.url + 'api?' + urllib.urlencode(params)
+        rss_url = self.provider.url + 'api?' + urlencode(params)
 
         logger.log(self.provider.name + " cache update URL: " + rss_url, logger.DEBUG)
 

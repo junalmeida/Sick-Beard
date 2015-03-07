@@ -16,8 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
-import urllib2
+from urllib import urlencode
 import datetime
 import traceback
 
@@ -242,7 +241,7 @@ class TVRage:
             urlData['ep'] = str(season) + 'x' + str(episode)
 
         # build the URL
-        url += urllib.urlencode(urlData)
+        url += urlencode(urlData)
 
         logger.log(u"Loading TVRage info from URL: " + url, logger.DEBUG)
         result = helpers.getURL(url)

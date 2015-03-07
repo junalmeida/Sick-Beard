@@ -29,12 +29,6 @@ from sickbeard.common import Quality
 from sickbeard import helpers, show_name_helpers
 from sickbeard import name_cache
 from sickbeard.exceptions import ex, AuthException
-
-try:
-    import xml.etree.cElementTree as etree
-except ImportError:
-    import elementtree.ElementTree as etree
-
 from lib.tvdb_api import tvdb_api, tvdb_exceptions
 
 from name_parser.parser import NameParser, InvalidNameException

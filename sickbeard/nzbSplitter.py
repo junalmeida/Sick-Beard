@@ -18,9 +18,10 @@
 
 from __future__ import with_statement
 
-import urllib2
-import xml.etree.cElementTree as etree
-import xml.etree
+try:
+    from xml.etree import cElementTree as ElementTree
+except ImportError:
+    from xml.etree import ElementTree
 import re
 
 from name_parser.parser import NameParser, InvalidNameException
@@ -34,7 +35,7 @@ from sickbeard.exceptions import ex
 def getSeasonNZBs(name, urlData, season):
 
     try:
-        showXML = etree.ElementTree(etree.XML(urlData))
+        showXML = ElementTree(ElementTree.XML(urlData))
     except SyntaxError:
         logger.log(u"Unable to parse the XML of " + name + ", not splitting it", logger.ERROR)
         return ({}, '')
@@ -79,14 +80,14 @@ def getSeasonNZBs(name, urlData, season):
 
 def createNZBString(fileElements, xmlns):
 
-    rootElement = etree.Element("nzb")
+    rootElement = ElementTree.Element("nzb")
     if xmlns:
         rootElement.set("xmlns", xmlns)
 
     for curFile in fileElements:
         rootElement.append(stripNS(curFile, xmlns))
 
-    return xml.etree.ElementTree.tostring(rootElement, 'utf-8')
+    return ElementTree.tostring(rootElement, 'utf-8')
 
 
 def saveNZB(nzbName, nzbString):

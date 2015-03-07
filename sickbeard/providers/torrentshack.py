@@ -18,14 +18,11 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
-import urllib
+from urllib import quote
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
 from xml.sax.saxutils import escape
@@ -134,7 +131,7 @@ class TorrentShackProvider(generic.TorrentProvider):
     def _doSearch(self, search_params, show=None):
         search_params = search_params.replace('.',' ')
         logger.log("[" + self.name + "] Performing Search: {0}".format(search_params))
-        searchUrl = self.url + "torrents.php?searchstr=" + urllib.quote(search_params) + "&filter_cat[600]=1&filter_cat[620]=1&filter_cat[700]=1&filter_cat[980]=1&filter_cat[981]=1"
+        searchUrl = self.url + "torrents.php?searchstr=" + quote(search_params) + "&filter_cat[600]=1&filter_cat[620]=1&filter_cat[700]=1&filter_cat[980]=1&filter_cat[981]=1"
         return self.parseResults(searchUrl)
     
     ################################################################################################### 
@@ -164,7 +161,7 @@ class TorrentShackProvider(generic.TorrentProvider):
         response = None
         
         if not self.session:
-             if not self._doLogin():
+            if not self._doLogin():
                 return response
             
         if not headers:
@@ -235,7 +232,7 @@ class TorrentShackCache(tvcache.TVCache):
             "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
 
             for title, url in provider._doSearch(""):
-                xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ urllib.quote(url,'/,:') + "</link>" + "</item>"
+                xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ quote(url,'/,:') + "</link>" + "</item>"
             xml += "</channel></rss>"
         return xml    
         

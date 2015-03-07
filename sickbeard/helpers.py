@@ -27,9 +27,13 @@ import stat
 import StringIO
 import time
 import traceback
-import urllib
 import urllib2
+import cookielib
+import sys
+if sys.version_info >= (2, 7, 9):
+    import ssl
 import zlib
+from lib import MultipartPostHandler
 
 from httplib import BadStatusLine
 
@@ -45,19 +49,13 @@ try:
 except ImportError:
     import elementtree.ElementTree as etree
 
-import sickbeard
-
 from sickbeard.exceptions import MultipleShowObjectsException, ex
-from sickbeard import logger, classes
-from sickbeard.common import USER_AGENT, mediaExtensions, XML_NSMAP
+from sickbeard import logger
+from sickbeard.common import USER_AGENT, mediaExtensions 
 
 from sickbeard import db
 from sickbeard import encodingKludge as ek
 from sickbeard import notifiers
-
-from lib.tvdb_api import tvdb_api, tvdb_exceptions
-
-urllib._urlopener = classes.SickBeardURLopener()
 
 
 def indentXML(elem, level=0):
@@ -140,60 +138,124 @@ def sanitizeFileName(name):
     return name
 
 
-def getURL(url, post_data=None, headers=[]):
+def getURL(url, validate=False, cookies = cookielib.CookieJar(), password_mgr=None, throw_exc=False):
     """
-    Returns a byte-string retrieved from the url provider.
+    Convenience method to directly retrieve the contents of a url
     """
+    obj = getURLFileLike(url, validate, cookies, password_mgr, throw_exc)
+    if obj:
+        return readURLFileLike(obj)
+    else:
+        return None
 
-    opener = urllib2.build_opener()
-    opener.addheaders = [('User-Agent', USER_AGENT), ('Accept-Encoding', 'gzip,deflate')]
-    for cur_header in headers:
-        opener.addheaders.append(cur_header)
 
+def getURLFileLike(url, validate=False, cookies = cookielib.CookieJar(), password_mgr=None, throw_exc=False):
+    """
+    Returns a file-like object same as returned by urllib2.urlopen but with Handlers configured for sickbeard.
+    
+    It allows for the use of cookies, multipart/form-data, https without certificate validation and both basic
+    and digest HTTP authentication. In addition, the user-agent is set to the sickbeard default and accepts
+    gzip and deflate encoding (which can be automatically handled when using readURL() to retrieve the contents).
+    It also has a default timeout set to 30 seconds.
+    
+    @param url: can be either a string or a Request object.
+    @param validate: defines if SSL certificates should be validated on HTTPS connections
+    @param cookies: is the cookielib.CookieJar in which cookies are stored.
+    @param password_mgr: if given, should be something that is compatible with HTTPPasswordMgr
+    @param throw_exc: throw the exception that was caught instead of None
+    @return: the file-like object retrieved from the URL or None (or the exception) if it could not be retrieved
+    """
+    # configure the OpenerDirector appropriately
+    if not validate and sys.version_info >= (2, 7, 9):
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies),
+                                          MultipartPostHandler.MultipartPostHandler,
+                                          urllib2.HTTPSHandler(context=ssl._create_unverified_context()),
+                                          urllib2.HTTPDigestAuthHandler(password_mgr),
+                                          urllib2.HTTPBasicAuthHandler(password_mgr))
+    else:
+        # Before python 2.7.9, there was no built-in way to validate SSL certificates
+        # Since our default is not to validate, it is of low priority to make it available here
+        if validate and sys.version_info < (2, 7, 9):
+            logger.log(u"The SSL certificate will not be validated for " + url + "(python 2.7.9+ required)", logger.MESSAGE)
+
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies),
+                                      MultipartPostHandler.MultipartPostHandler,
+                                      urllib2.HTTPDigestAuthHandler(password_mgr),
+                                      urllib2.HTTPBasicAuthHandler(password_mgr))
+
+    # set the default headers for every request
+    opener.addheaders = [('User-Agent', USER_AGENT), 
+                         ('Accept-Encoding', 'gzip,deflate')]
+        
     try:
-        usock = opener.open(url, post_data)
-        url = usock.geturl()
-        encoding = usock.info().get("Content-Encoding")
-
-        if encoding in ('gzip', 'x-gzip', 'deflate'):
-            content = usock.read()
-            if encoding == 'deflate':
-                data = StringIO.StringIO(zlib.decompress(content))
-            else:
-                data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
-            result = data.read()
-
-        else:
-            result = usock.read()
-
-        usock.close()
+        # open the URL with a default timeout of 30 seconds
+        return opener.open(url, timeout=30)
 
     except urllib2.HTTPError, e:
         logger.log(u"HTTP error " + str(e.code) + " while loading URL " + url, logger.WARNING)
-        return None
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except urllib2.URLError, e:
         logger.log(u"URL error " + str(e.reason) + " while loading URL " + url, logger.WARNING)
-        return None
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except BadStatusLine:
         logger.log(u"BadStatusLine error while loading URL " + url, logger.WARNING)
-        return None
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except socket.timeout:
         logger.log(u"Timed out while loading URL " + url, logger.WARNING)
-        return None
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except ValueError:
         logger.log(u"Unknown error while loading URL " + url, logger.WARNING)
-        return None
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except Exception:
         logger.log(u"Unknown exception while loading URL " + url + ": " + traceback.format_exc(), logger.WARNING)
-        return None
+        if throw_exc:
+            raise 
+        else:
+            return None
 
-    return result
+def readURLFileLike(urlFileLike):
+    """
+    Return the contents of the file like objects as string, performing decompression if necessary.
+    
+    @param urlFileLike: is a file like objects same as returned by urllib2.urlopen() and getURL()
+    @return a string representing the data retrieved from the URL
+    """
+    encoding = urlFileLike.info().get("Content-Encoding")
 
+    if encoding in ('gzip', 'x-gzip', 'deflate'):
+        content = urlFileLike.read()
+        if encoding == 'deflate':
+            data = StringIO.StringIO(zlib.decompress(content))
+        else:
+            data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
+        result = data.read()
+
+    else:
+        result = urlFileLike.read()
+
+    urlFileLike.close()
+    
+    return result;
 
 def findCertainShow(showList, tvdbid):
     results = filter(lambda x: x.tvdbid == tvdbid, showList)

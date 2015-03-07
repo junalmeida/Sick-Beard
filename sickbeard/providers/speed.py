@@ -18,14 +18,11 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
-import urllib
+from urllib import quote
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
 from xml.sax.saxutils import escape
@@ -133,7 +130,7 @@ class SpeedProvider(generic.TorrentProvider):
 
     def _doSearch(self, search_params, show=None):
         logger.log("[" + self.name + "] Performing Search: {0}".format(search_params))
-        searchUrl = self.url + "browse.php?c49=1&c2=1&c41=1&search=" + urllib.quote(search_params)
+        searchUrl = self.url + "browse.php?c49=1&c2=1&c41=1&search=" + quote(search_params)
         return self.parseResults(searchUrl)
     
     ################################################################################################### 
@@ -159,7 +156,7 @@ class SpeedProvider(generic.TorrentProvider):
         response = None
         
         if not self.session:
-             if not self._doLogin():
+            if not self._doLogin():
                 return response
             
         if not headers:
@@ -232,7 +229,7 @@ class SpeedCache(tvcache.TVCache):
             "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
             
             for title, url in data:
-                xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ urllib.quote(url,'/,:') + "</link>" + "</item>"
+                xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ quote(url,'/,:') + "</link>" + "</item>"
             xml += "</channel></rss>"
         return xml
         

@@ -25,6 +25,7 @@ from hashlib import sha1
 
 from lib import requests
 from lib.bencode import bencode, bdecode
+from base64 import b16encode, b32decode
 
 from sickbeard import logger
 from sickbeard.exceptions import ex
@@ -48,20 +49,20 @@ def _authToken(session=None,host=None, username=None, password=None):
 ###################################################################################################
 
 def _TorrentHash(url=None,torrent=None):
-    hash=None
+    torrentHash=None
     if url.startswith('magnet'):
-        hash = re.search('urn:btih:([\w]{32,40})', url).group(1)
-        if len(hash) == 32:
-            hash = b16encode(b32decode(hash)).upper()
+        torrentHash = re.search('urn:btih:([\w]{32,40})', url).group(1)
+        if len(torrentHash) == 32:
+            torrentHash = b16encode(b32decode(torrentHash)).upper()
     else:
         info = bdecode(torrent)["info"]
-        hash = sha1(bencode(info)).hexdigest().upper()
-    return hash
+        torrentHash = sha1(bencode(info)).hexdigest().upper()
+    return torrentHash
 
 ###################################################################################################
 
 def testAuthentication(host=None, username=None, password=None):
-    auth,session = _authToken(None,host,username,password)
+    auth = _authToken(None,host,username,password)[0]
     if auth:
         return True,u"[uTorrent] Authenication Successful."
     return False,u"[uTorrent] Authenication Failed."
@@ -87,7 +88,6 @@ def sendTORRENT(torrent):
     
     ###################################################################################################
     
-    session = None
     torrent_hash = None
     params = {}
     files = {}

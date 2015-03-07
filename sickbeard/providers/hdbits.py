@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
+from urllib import urlencode
 import generic
 import sickbeard
 
 from sickbeard import logger, tvcache, exceptions
 from sickbeard import helpers
 from sickbeard.common import Quality
-from sickbeard.exceptions import ex, AuthException
+from sickbeard.exceptions import AuthException
 from sickbeard.name_parser.parser import NameParser, InvalidNameException
 
 try:
@@ -141,7 +141,7 @@ class HDBitsProvider(generic.TorrentProvider):
     def _get_title_and_url(self, item):
 
         title = item['name']
-        url = self.download_url + urllib.urlencode({'id': item['id'], 'passkey': sickbeard.HDBITS_PASSKEY})
+        url = self.download_url + urlencode({'id': item['id'], 'passkey': sickbeard.HDBITS_PASSKEY})
 
         return (title, url)
 

@@ -16,13 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
+from urllib import urlencode
 import re
-try:
-    import xml.etree.cElementTree as etree
-except ImportError:
-    import elementtree.ElementTree as etree
-
 import sickbeard
 import generic
 
@@ -107,7 +102,7 @@ class EZRSSProvider(generic.TorrentProvider):
         if search_params:
             params.update(search_params)
 
-        search_url = self.url + 'search/index.php?' + urllib.urlencode(params)
+        search_url = self.url + 'search/index.php?' + urlencode(params)
 
         logger.log(u"Search string: " + search_url, logger.DEBUG)
 

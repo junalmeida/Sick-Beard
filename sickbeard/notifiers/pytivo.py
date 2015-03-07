@@ -20,7 +20,7 @@ import os
 import sickbeard
 
 from urllib import urlencode
-from urllib2 import Request, urlopen, URLError
+from urllib2 import URLError
 
 from sickbeard import logger
 from sickbeard import encodingKludge as ek
@@ -44,11 +44,11 @@ class pyTivoNotifier:
         shareName = sickbeard.PYTIVO_SHARE_NAME
         tsn = sickbeard.PYTIVO_TIVO_NAME
         
-        # There are two more values required, the container and file.
+        # There are two more values required, the container and libraryFile.
         # 
         # container: The share name, show name and season
         #
-        # file: The file name
+        # libraryFile: The libraryFile name
         # 
         # Some slicing and dicing of variables is required to get at these values.
         #
@@ -72,17 +72,15 @@ class pyTivoNotifier:
         showAndSeason = rootShowAndSeason.replace(root, "")
         
         container = shareName + "/" + showAndSeason
-        file = "/" + absPath.replace(root, "")
+        libraryFile = "/" + absPath.replace(root, "")
         
-        # Finally create the url and make request
-        requestUrl = "http://" + host + "/TiVoConnect?" + urlencode( {'Command':'Push', 'Container':container, 'File':file, 'tsn':tsn} )
+        # Finally create the url and retrieve its contents
+        requestUrl = "http://" + host + "/TiVoConnect?" + urlencode( {'Command':'Push', 'Container':container, 'File':libraryFile, 'tsn':tsn} )
                
         logger.log(u"pyTivo notification: Requesting " + requestUrl)
-        
-        request = Request( requestUrl )
 
         try:
-            response = urlopen(request) #@UnusedVariable   
+            sickbeard.helpers.getURLFileLike(requestUrl, throw_exc=True)
         except URLError, e:
             if hasattr(e, 'reason'):
                 logger.log(u"pyTivo notification: Error, failed to reach a server")

@@ -17,8 +17,7 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import urllib2
-
+from urllib2 import Request
 from hashlib import sha1
 
 try:
@@ -133,7 +132,8 @@ class TraktNotifier:
         # request the URL from trakt and parse the result as json
         try:
             logger.log("trakt_notifier: Calling method http://api.trakt.tv/" + method + ", with data" + encoded_data, logger.DEBUG)
-            stream = urllib2.urlopen("http://api.trakt.tv/" + method, encoded_data)
+            req = Request("http://api.trakt.tv/" + method, data=encoded_data)
+            stream = sickbeard.helpers.getURLFileLike(req, throw_exc=True)
             resp = stream.read()
 
             resp = json.loads(resp)

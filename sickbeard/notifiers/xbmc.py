@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
-import urllib2
+from urllib import urlencode, quote, unquote
+from urllib2 import Request, URLError
 import socket
 import base64
 import time
@@ -181,12 +181,12 @@ class XBMCNotifier:
             if type(command[key]) == unicode:
                 command[key] = command[key].encode('utf-8')
 
-        enc_command = urllib.urlencode(command)
+        enc_command = urlencode(command)
         logger.log(u"XBMC encoded API command: " + enc_command, logger.DEBUG)
 
         url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, enc_command)
         try:
-            req = urllib2.Request(url)
+            req = Request(url)
             # if we have a password, use authentication
             if password:
                 base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
@@ -196,14 +196,14 @@ class XBMCNotifier:
             else:
                 logger.log(u"Contacting XBMC via url: " + fixStupidEncodings(url), logger.DEBUG)
 
-            response = urllib2.urlopen(req)
+            response = sickbeard.helpers.getURLFileLike(req, throw_exc=True)
             result = response.read().decode(sickbeard.SYS_ENCODING)
             response.close()
 
             logger.log(u"XBMC HTTP response: " + result.replace('\n', ''), logger.DEBUG)
             return result
 
-        except (urllib2.URLError, IOError), e:
+        except (URLError, IOError), e:
             logger.log(u"Warning: Couldn't contact XBMC HTTP at " + fixStupidEncodings(url) + " " + ex(e), logger.WARNING)
             return False
 
@@ -255,7 +255,7 @@ class XBMCNotifier:
                 logger.log(u"Invalid response for " + showName + " on " + host, logger.DEBUG)
                 return False
 
-            encSqlXML = urllib.quote(sqlXML, ':\\/<>')
+            encSqlXML = quote(sqlXML, ':\\/<>')
             try:
                 et = etree.fromstring(encSqlXML)
             except SyntaxError, e:
@@ -270,7 +270,7 @@ class XBMCNotifier:
 
             for path in paths:
                 # we do not need it double-encoded, gawd this is dumb
-                unEncPath = urllib.unquote(path.text).decode(sickbeard.SYS_ENCODING)
+                unEncPath = unquote(path.text).decode(sickbeard.SYS_ENCODING)
                 logger.log(u"XBMC Updating " + showName + " on " + host + " at " + unEncPath, logger.DEBUG)
                 updateCommand = {'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video, %s)' % (unEncPath)}
                 request = self._send_to_xbmc(updateCommand, host)
@@ -325,7 +325,7 @@ class XBMCNotifier:
 
         url = 'http://%s/jsonrpc' % (host)
         try:
-            req = urllib2.Request(url, command)
+            req = Request(url, command)
             req.add_header("Content-type", "application/json")
             # if we have a password, use authentication
             if password:
@@ -337,8 +337,8 @@ class XBMCNotifier:
                 logger.log(u"Contacting XBMC via url: " + fixStupidEncodings(url), logger.DEBUG)
 
             try:
-                response = urllib2.urlopen(req)
-            except urllib2.URLError, e:
+                response = sickbeard.helpers.getURLFileLike(req, throw_exc=True)
+            except URLError, e:
                 logger.log(u"Error while trying to retrieve XBMC API version for " + host + ": " + ex(e), logger.WARNING)
                 return False
 

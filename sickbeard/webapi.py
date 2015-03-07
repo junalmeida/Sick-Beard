@@ -21,7 +21,7 @@ from __future__ import with_statement
 
 import os
 import time
-import urllib
+from urllib import urlencode, unquote_plus
 import datetime
 import threading
 import re
@@ -43,8 +43,10 @@ try:
     import json
 except ImportError:
     from lib import simplejson as json
-
-import xml.etree.cElementTree as etree
+try:
+    from xml.etree import cElementTree as ElementTree
+except ImportError:
+    from xml.etree import ElementTree
 
 dateFormat = "%Y-%m-%d"
 dateTimeFormat = "%Y-%m-%d %H:%M"
@@ -158,13 +160,13 @@ class Api:
 
         return webserve._munge(t)
 
-    def _out_as_json(self, dict):
+    def _out_as_json(self, fromDict):
         """ set cherrypy response to json """
         response = cherrypy.response
         request = cherrypy.request
         response.headers['Content-Type'] = 'application/json;charset=UTF-8'
         try:
-            out = json.dumps(dict, indent=self.intent, sort_keys=True)
+            out = json.dumps(fromDict, indent=self.intent, sort_keys=True)
             callback = request.params.get('callback') or request.params.get('jsonp')
             if callback != None:
                 out = callback + '(' + out + ');' # wrap with JSONP call if requested
@@ -326,25 +328,25 @@ class ApiCall(object):
         except AttributeError:
             self._optionalParams = []
 
-        for paramDict, type in [(self._requiredParams, "requiredParameters"),
+        for paramDict, paramType in [(self._requiredParams, "requiredParameters"),
                           (self._optionalParams, "optionalParameters")]:
 
-            if type in self._help:
+            if paramType in self._help:
                 for paramName in paramDict:
-                    if not paramName in self._help[type]:
-                        self._help[type][paramName] = {}
+                    if not paramName in self._help[paramType]:
+                        self._help[paramType][paramName] = {}
                     if paramDict[paramName]["allowedValues"]:
-                        self._help[type][paramName]["allowedValues"] = paramDict[paramName]["allowedValues"]
+                        self._help[paramType][paramName]["allowedValues"] = paramDict[paramName]["allowedValues"]
                     else:
-                        self._help[type][paramName]["allowedValues"] = "see desc"
-                    self._help[type][paramName]["defaultValue"] = paramDict[paramName]["defaultValue"]
+                        self._help[paramType][paramName]["allowedValues"] = "see desc"
+                    self._help[paramType][paramName]["defaultValue"] = paramDict[paramName]["defaultValue"]
 
             elif paramDict:
                 for paramName in paramDict:
-                    self._help[type] = {}
-                    self._help[type][paramName] = paramDict[paramName]
+                    self._help[paramType] = {}
+                    self._help[paramType][paramName] = paramDict[paramName]
             else:
-                self._help[type] = {}
+                self._help[paramType] = {}
         msg = "No description available"
         if "desc" in self._help:
             msg = self._help["desc"]
@@ -358,7 +360,7 @@ class ApiCall(object):
             msg = "The required parameters: '" + "','".join(self._missing) + "' where not set"
         return _responds(RESULT_ERROR, msg=msg)
 
-    def check_params(self, args, kwargs, key, default, required, type, allowedValues):
+    def check_params(self, args, kwargs, key, default, required, paramType, allowedValues):
         # TODO: explain this
         """ function to check passed params for the shorthand wrapper
             and to detect missing/required param
@@ -366,7 +368,7 @@ class ApiCall(object):
         missing = True
         orgDefault = default
 
-        if type == "bool":
+        if paramType == "bool":
             allowedValues = [0, 1]
 
         if args:
@@ -397,17 +399,17 @@ class ApiCall(object):
                                              "defaultValue": orgDefault}
 
         if default:
-            default = self._check_param_type(default, key, type)
-            if type == "bool":
-                type = []
+            default = self._check_param_type(default, key, paramType)
+            if paramType == "bool":
+                paramType = []
             self._check_param_value(default, key, allowedValues)
 
         return default, args
 
-    def _check_param_type(self, value, name, type):
-        """ checks if value can be converted / parsed to type
+    def _check_param_type(self, value, name, paramType):
+        """ checks if value can be converted / parsed to paramType
             will raise an error on failure
-            or will convert it to type and return new converted value
+            or will convert it to paramType and return new converted value
             can check for:
             - int: will be converted into int
             - bool: will be converted to False / True
@@ -416,12 +418,12 @@ class ApiCall(object):
             - ignore: will ignore it, just like "string"
         """
         error = False
-        if type == "int":
+        if paramType == "int":
             if _is_int(value):
                 value = int(value)
             else:
                 error = True
-        elif type == "bool":
+        elif paramType == "bool":
             if value in ("0", "1"):
                 value = bool(int(value))
             elif value in ("true", "True", "TRUE"):
@@ -430,18 +432,18 @@ class ApiCall(object):
                 value = False
             else:
                 error = True
-        elif type == "list":
+        elif paramType == "list":
             value = value.split("|")
-        elif type == "string":
+        elif paramType == "string":
             pass
-        elif type == "ignore":
+        elif paramType == "ignore":
             pass
         else:
-            logger.log(u"API :: Invalid param type set " + str(type) + " can not check or convert ignoring it", logger.ERROR)
+            logger.log(u"API :: Invalid param type set " + str(paramType) + " can not check or convert ignoring it", logger.ERROR)
 
         if error:
             # this is a real ApiError !!
-            raise ApiError(u"param: '" + str(name) + "' with given value: '" + str(value) + "' could not be parsed into '" + str(type) + "'")
+            raise ApiError(u"param: '" + str(name) + "' with given value: '" + str(value) + "' could not be parsed into '" + str(paramType) + "'")
 
         return value
 
@@ -510,13 +512,13 @@ def _is_int(data):
         return True
 
 
-def _rename_element(dict, oldKey, newKey):
+def _rename_element(inDict, oldKey, newKey):
     try:
-        dict[newKey] = dict[oldKey]
-        del dict[oldKey]
+        inDict[newKey] = inDict[oldKey]
+        del inDict[oldKey]
     except (ValueError, TypeError, NameError):
         pass
-    return dict
+    return inDict
 
 
 def _responds(result_type, data=None, msg=""):
@@ -631,7 +633,7 @@ def _getRootDirs():
         return {}
 
     # clean up the list - replace %xx escapes by their single-character equivalent
-    root_dirs = [urllib.unquote_plus(x) for x in root_dirs]
+    root_dirs = [unquote_plus(x) for x in root_dirs]
 
     default_dir = root_dirs[default_index]
 
@@ -1207,7 +1209,7 @@ class CMD_SickBeardAddRootDir(ApiCall):
     def run(self):
         """ add a parent directory to sickbeard's config """
 
-        self.location = urllib.unquote_plus(self.location)
+        self.location = unquote_plus(self.location)
         location_matched = 0
 
         # dissallow adding/setting an invalid dir
@@ -1223,7 +1225,7 @@ class CMD_SickBeardAddRootDir(ApiCall):
             index = int(sickbeard.ROOT_DIRS.split('|')[0])
             root_dirs.pop(0)
             # clean up the list - replace %xx escapes by their single-character equivalent
-            root_dirs = [urllib.unquote_plus(x) for x in root_dirs]
+            root_dirs = [unquote_plus(x) for x in root_dirs]
             for x in root_dirs:
                 if(x == self.location):
                     location_matched = 1
@@ -1238,7 +1240,7 @@ class CMD_SickBeardAddRootDir(ApiCall):
             else:
                 root_dirs.append(self.location)
 
-        root_dirs_new = [urllib.unquote_plus(x) for x in root_dirs]
+        root_dirs_new = [unquote_plus(x) for x in root_dirs]
         root_dirs_new.insert(0, index)
         root_dirs_new = '|'.join(unicode(x) for x in root_dirs_new)
 
@@ -1293,7 +1295,7 @@ class CMD_SickBeardDeleteRootDir(ApiCall):
         index = int(root_dirs[0])
         root_dirs.pop(0)
         # clean up the list - replace %xx escapes by their single-character equivalent
-        root_dirs = [urllib.unquote_plus(x) for x in root_dirs]
+        root_dirs = [unquote_plus(x) for x in root_dirs]
         old_root_dir = root_dirs[index]
         for curRootDir in root_dirs:
             if not curRootDir == self.location:
@@ -1306,7 +1308,7 @@ class CMD_SickBeardDeleteRootDir(ApiCall):
                 newIndex = curIndex
                 break
 
-        root_dirs_new = [urllib.unquote_plus(x) for x in root_dirs_new]
+        root_dirs_new = [unquote_plus(x) for x in root_dirs_new]
         if len(root_dirs_new) > 0:
             root_dirs_new.insert(0, newIndex)
         root_dirs_new = "|".join(unicode(x) for x in root_dirs_new)
@@ -1471,14 +1473,14 @@ class CMD_SickBeardSearchTVDB(ApiCall):
         if self.name and not self.tvdbid: # only name was given
             baseURL = "http://thetvdb.com/api/GetSeries.php?"
             params = {"seriesname": str(self.name).encode('utf-8'), 'language': self.lang}
-            finalURL = baseURL + urllib.urlencode(params)
+            finalURL = baseURL + urlencode(params)
             urlData = sickbeard.helpers.getURL(finalURL)
 
             if urlData is None:
                 return _responds(RESULT_FAILURE, msg="Did not get result from tvdb")
             else:
                 try:
-                    seriesXML = etree.ElementTree(etree.XML(urlData))
+                    seriesXML = ElementTree(ElementTree.XML(urlData))
                 except Exception, e:
                     logger.log(u"API :: Unable to parse XML for some reason: " + ex(e) + " from XML: " + urlData, logger.ERROR)
                     return _responds(RESULT_FAILURE, msg="Unable to read result from tvdb")

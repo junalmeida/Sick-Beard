@@ -18,21 +18,19 @@
 
 
 
-import urllib, httplib
+from urllib import urlencode 
+from urllib2 import Request
+from httplib import InvalidURL
 import datetime
-
-import sickbeard
-
-from lib import MultipartPostHandler
-import urllib2, cookielib
 try:
     import json
 except ImportError:
     from lib import simplejson as json
 
-from sickbeard.common import USER_AGENT
+import sickbeard
 from sickbeard import logger
 from sickbeard.exceptions import ex
+from sickbeard import helpers
 
 def sendNZB(nzb):
     """
@@ -67,7 +65,7 @@ def sendNZB(nzb):
         params['mode'] = 'addfile'
         multiPartParams = {"nzbfile": (nzb.name + ".nzb", nzb.extraInfo[0])}
 
-    url = sickbeard.SAB_HOST + "api?" + urllib.urlencode(params)
+    url = sickbeard.SAB_HOST + "api?" + urlencode(params)
 
     logger.log(u"Sending NZB to SABnzbd")
     logger.log(u"URL: " + url, logger.DEBUG)
@@ -75,24 +73,18 @@ def sendNZB(nzb):
     try:
         # if we have the URL to an NZB then we've built up the SAB API URL already so just call it 
         if nzb.resultType == "nzb":
-            f = urllib.urlopen(url)
+            f = helpers.getURLFileLike(url, throw_exc=True)
         
         # if we are uploading the NZB data to SAB then we need to build a little POST form and send it
         elif nzb.resultType == "nzbdata":
-            cookies = cookielib.CookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies),
-                                          MultipartPostHandler.MultipartPostHandler)
-            req = urllib2.Request(url,
-                                  multiPartParams,
-                                  headers={'User-Agent': USER_AGENT})
-
-            f = opener.open(req)
+            req = Request(url, multiPartParams)
+            f = helpers.getURLFileLike(req, throw_exc=True)
 
     except (EOFError, IOError), e:
         logger.log(u"Unable to connect to SAB: " + ex(e), logger.ERROR)
         return False
 
-    except httplib.InvalidURL, e:
+    except InvalidURL, e:
         logger.log(u"Invalid SAB host, check your config: " + ex(e), logger.ERROR)
         return False
 
@@ -103,7 +95,7 @@ def sendNZB(nzb):
 
     # if we opened the URL connection then read the result from SAB
     try:
-        result = f.readlines()
+        result = helpers.readURLFileLike(f)
     except Exception, e:
         logger.log(u"Error trying to get result from SAB, NZB not sent: " + ex(e), logger.ERROR)
         return False
@@ -114,8 +106,8 @@ def sendNZB(nzb):
         return False
 
     # massage the result a little bit
-    sabText = result[0].strip()
-
+    sabText = result.strip()
+    
     logger.log(u"Result text from SAB: " + sabText, logger.DEBUG)
 
     # do some crude parsing of the result text to determine what SAB said
@@ -158,11 +150,11 @@ def _checkSabResponse(f):
 
 def _sabURLOpenSimple(url):
     try:
-        f = urllib.urlopen(url)
+        f = helpers.getURLFileLike(url)
     except (EOFError, IOError), e:
         logger.log(u"Unable to connect to SAB: " + ex(e), logger.ERROR)
         return False, "Unable to connect"
-    except httplib.InvalidURL, e:
+    except InvalidURL, e:
         logger.log(u"Invalid SAB host, check your config: " + ex(e), logger.ERROR)
         return False, "Invalid SAB host"
     if f == None:
@@ -203,7 +195,7 @@ def testAuthentication(host=None, username=None, password=None, apikey=None):
     params['ma_username'] = username
     params['ma_password'] = password
     params['apikey'] = apikey
-    url = host + "api?" + urllib.urlencode(params)
+    url = host + "api?" + urlencode(params)
     
     # send the test request
     logger.log(u"SABnzbd test URL: " + url, logger.DEBUG)

@@ -25,7 +25,8 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import requests
+from urllib import urlencode
+from urllib2 import Request, HTTPPasswordMgrWithDefaultRealm
 
 try:
     import json
@@ -36,7 +37,6 @@ import sickbeard
 
 from sickbeard import logger
 from sickbeard.common import notifyStrings, NOTIFY_SNATCH, NOTIFY_DOWNLOAD
-from sickbeard.exceptions import ex
 
 API_URL = "https://api.pushbullet.com/v2/"
 
@@ -50,17 +50,17 @@ class PushbulletNotifier:
     ###################################################################################################
 
     def _retriveDevices(self,apiKey=None):
-        session = requests.Session()
+        pw_mgr = HTTPPasswordMgrWithDefaultRealm();
         if apiKey:
-            session.auth = (apiKey, '')
+            pw_mgr.add_password(None, API_URL, apiKey, '')
         else:
-            session.auth = (sickbeard.PUSHBULLET_APIKEY, '')
-        
-        response = session.get(API_URL + "devices",timeout=30)
+            pw_mgr.add_password(None, API_URL, sickbeard.PUSHBULLET_APIKEY, '')
+        # retrieve the URL (helpers method has a default timeout of 30 seconds)
+        response = sickbeard.helpers.getURL(API_URL + "devices", password_mgr=pw_mgr)
         
         try:
-            jdata = json.loads(response.content)
-        except ValueError, e:
+            json.loads(response.content)
+        except ValueError:
             logger.log("[Pushbullet] _retriveDevices() invalid data retriving device list")
             return False;
 
@@ -74,24 +74,34 @@ class PushbulletNotifier:
             logger.log("[Pushbullet] API Key missing...", logger.ERROR)
             return False
         
-        session = requests.Session()
-        session.auth = (apiKey, '')
-        session.headers.update({'Content-Type': 'application/json'})
-        
+        # create authentication part of Request
+        pw_mgr = HTTPPasswordMgrWithDefaultRealm();
+        if apiKey:
+            pw_mgr.add_password(None, API_URL, apiKey, '')
+        else:
+            pw_mgr.add_password(None, API_URL, sickbeard.PUSHBULLET_APIKEY, '')
+        # add header to indicate json content should be returned
+        headers = {'Content-Type': 'application/json'}
+        # create the POST parameters
         payload = {'type':'note', 'title': title, 'body':  msg.strip()}
-
         if device:
             payload['device_iden'] = device
+        # convert the POST data to the proper url-encoded format
+        data = urlencode(payload)
             
-        response = session.post(API_URL + "pushes", data=json.dumps(payload),timeout=30)
-        if response.status_code != 200:
+        # create a Request object with the appropriate values
+        req = Request(API_URL + "pushes", data, headers)
+        # retrieve the URL (helpers method has a default timeout of 30 seconds)
+        response = sickbeard.helpers.getURLFileLike(req, password_mgr=pw_mgr)
+        if response.getcode() != 200:
                 logger.log("[Pushbullet] Wrong data sent to pushbullet", logger.ERROR)
                 return False
-
-        if response.json()['active'] == True and response.json()['dismissed'] == False:
+        # try to parse the retrieved URL as json
+        respString = sickbeard.helpers.readURLFileLike(response)
+        respJSON = json.loads(respString)
+        if respJSON['active'] == True and respJSON['dismissed'] == False:
             logger.log("[Pushbullet] notification successful.", logger.DEBUG)
             return True
-        
         logger.log("[Pushbullet] notification failed.", logger.ERROR)
         return False
 
