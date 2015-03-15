@@ -186,6 +186,7 @@ TVTORRENTS_HASH = None
 
 KICKASS = False
 KICKASS_ALT_URL = None
+KICKASS_VERIFIED = False
 
 TORRENTZ = False
 TORRENTZ_VERIFIED = False
@@ -401,7 +402,7 @@ def initialize(consoleLogging=True):
                 showUpdateScheduler, __INITIALIZED__, LAUNCH_BROWSER, showList, loadingShowList, \
                 NEWZNAB_DATA, NZBS, NZBS_UID, NZBS_HASH, EZRSS, HDBITS, HDBITS_USERNAME, HDBITS_PASSKEY, TVTORRENTS, TVTORRENTS_DIGEST, TVTORRENTS_HASH, BTN, BTN_API_KEY, \
                 TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, \
-                KICKASS, KICKASS_ALT_URL, \
+                KICKASS, KICKASS_ALT_URL, KICKASS_VERIFIED, \
                 TORRENTZ, TORRENTZ_VERIFIED, \
                 TORRENTLEECH, TORRENTLEECH_USERNAME, TORRENTLEECH_PASSWORD, \
                 TORRENTDAY, TORRENTDAY_ALT_URL, TORRENTDAY_USERNAME, TORRENTDAY_PASSWORD, \
@@ -578,7 +579,8 @@ def initialize(consoleLogging=True):
 
         KICKASS = bool(check_setting_int(CFG, 'KICKASS', 'kickass', 0))
         KICKASS_ALT_URL = check_setting_str(CFG, 'KICKASS', 'kickass_alt_url', '')
-        
+        KICKASS_VERIFIED = bool(check_setting_int(CFG, 'KICKASS', 'kickass_verified', 0))
+
         TORRENTZ = bool(check_setting_int(CFG, 'TORRENTZ', 'torrentz', 0))    
         TORRENTZ_VERIFIED = bool(check_setting_int(CFG, 'TORRENTZ', 'torrentz_verified', 0))    
 
@@ -1207,6 +1209,7 @@ def save_config():
     new_config['KICKASS'] = {}
     new_config['KICKASS']['kickass'] = int(KICKASS)
     new_config['KICKASS']['kickass_alt_url'] = KICKASS_ALT_URL
+    new_config['KICKASS']['kickass_verified'] = int(KICKASS_VERIFIED)
 
     new_config['TORRENTZ'] = {}
     new_config['TORRENTZ']['torrentz'] = int(TORRENTZ)

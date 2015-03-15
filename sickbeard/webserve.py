@@ -1008,7 +1008,7 @@ class ConfigProviders:
                       torrentz_verified = None,
                       speed_username = None, speed_password = None, speed_rsshash = None,
                       revolutiontt_username = None, revolutiontt_password = None, revolutiontt_rsshash = None,
-                      kickass_alt_url = None,
+                      kickass_alt_url = None, kickass_verified = None,
                       provider_order=None):
 
         results = []
@@ -1136,6 +1136,13 @@ class ConfigProviders:
             sickbeard.THEPIRATEBAY_URL_OVERRIDE = ""
             
         sickbeard.KICKASS_ALT_URL = kickass_alt_url.strip()
+
+        if kickass_verified == "on":
+            kickass_verified = 1
+        else:
+            kickass_verified = 0
+
+        sickbeard.KICKASS_VERIFIED = kickass_verified
  
         sickbeard.TORRENTLEECH_USERNAME = torrentleech_username
         sickbeard.TORRENTLEECH_PASSWORD = torrentleech_password
