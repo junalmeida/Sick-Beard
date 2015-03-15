@@ -266,6 +266,13 @@
                                 <span class="component-desc"><i>Example:</i> <a href="http://katproxy.com/" target="_blank">http://katproxy.com/</a></span>
                             </label>
                         </div>
+                        <div class="field-pair">
+                            <input type="checkbox" name="kickass_verified" id="kickass_verified" #if $sickbeard.KICKASS_VERIFIED then "checked=\"checked\"" else ""#/>
+                            <label class="clearfix" for="kickass_verified">
+                                <span class="component-title">Only Verified</span>
+                                <span class="component-desc">Download only verified torrents?</span>
+                            </label>
+                        </div>
                     </div><!-- /KickAssDiv //-->
                     
                     <div class="providerDiv" id="torrentdayDiv">
