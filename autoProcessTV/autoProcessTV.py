@@ -18,6 +18,8 @@
 
 
 import sys
+if sys.version_info >= (2, 7, 9):
+    import ssl
 import urllib
 import os.path
 import ConfigParser
@@ -27,7 +29,10 @@ class AuthURLOpener(urllib.FancyURLopener):
         self.username = user
         self.password = pw
         self.numTries = 0
-        urllib.FancyURLopener.__init__(self)
+        if sys.version_info >= (2, 7, 9):
+            urllib.FancyURLopener.__init__(self, context=ssl._create_unverified_context())
+        else:
+            urllib.FancyURLopener.__init__(self)
     
     def prompt_user_passwd(self, host, realm):
         if self.numTries == 0:
@@ -77,7 +82,7 @@ def processEpisode(dirName, nzbName=None):
     
     params['quiet'] = 1
 
-    params['dir'] = dirName
+    params['directory'] = dirName
     if nzbName != None:
         params['nzbName'] = nzbName
         

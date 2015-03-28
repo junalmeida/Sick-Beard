@@ -21,7 +21,7 @@ from __future__ import with_statement
 import os.path
 
 import time
-import urllib
+from urllib import urlencode, quote_plus, unquote_plus
 import re
 import threading
 import datetime
@@ -48,7 +48,7 @@ from sickbeard.common import SNATCHED, SKIPPED, UNAIRED, IGNORED, ARCHIVED, WANT
 from sickbeard.exceptions import ex
 from sickbeard.webapi import Api
 
-from lib.tvdb_api import tvdb_api, tvdb_exceptions
+from lib.tvdb_api import tvdb_api
 
 try:
     import json
@@ -1478,12 +1478,12 @@ class HomePostProcess:
         return _munge(t)
 
     @cherrypy.expose
-    def processEpisode(self, dir=None, nzbName=None, jobName=None, quiet=None):
+    def processEpisode(self, directory=None, nzbName=None, jobName=None, quiet=None):
 
-        if not dir:
+        if not directory:
             redirect("/home/postprocess/")
         else:
-            result = processTV.processDir(dir, nzbName)
+            result = processTV.processDir(directory, nzbName)
             if quiet != None and int(quiet) == 1:
                 return result
 
@@ -1541,7 +1541,7 @@ class NewHomeAddShows:
             params = {'seriesname': searchTerm,
                   'language': lang}
 
-            finalURL = baseURL + urllib.urlencode(params)
+            finalURL = baseURL + urlencode(params)
 
             logger.log(u"Searching for Show with searchterm: \'" + searchTerm.decode('utf-8') + u"\' on URL " + finalURL, logger.DEBUG)
             urlData = helpers.getURL(finalURL)
@@ -1588,7 +1588,7 @@ class NewHomeAddShows:
         else:
             root_dirs = rootDir
 
-        root_dirs = [urllib.unquote_plus(x) for x in root_dirs]
+        root_dirs = [unquote_plus(x) for x in root_dirs]
 
         if sickbeard.ROOT_DIRS:
             default_index = int(sickbeard.ROOT_DIRS.split('|')[0])
@@ -1808,7 +1808,7 @@ class NewHomeAddShows:
         elif type(shows_to_add) != list:
             shows_to_add = [shows_to_add]
 
-        shows_to_add = [urllib.unquote_plus(x) for x in shows_to_add]
+        shows_to_add = [unquote_plus(x) for x in shows_to_add]
 
         promptForSettings = config.checkbox_to_value(promptForSettings)
 
@@ -1972,15 +1972,15 @@ class Home:
     def testTorrent(self, torrent_method=None, host=None, username=None, password=None):
         if not host.endswith("/"):
             host = host + "/"
-        
+        # only retrieve the access message, ignore the "connection" part of the returned tuple
         if torrent_method == 'utorrent':
-            connection, accesMsg = utorrent.testAuthentication(host, username, password)
+            accesMsg = utorrent.testAuthentication(host, username, password)[1]
         elif torrent_method == 'transmission':
-            connection, accesMsg = transmission.testAuthentication(host, username, password)
+            accesMsg = transmission.testAuthentication(host, username, password)[1]
         elif torrent_method == 'downloadstation':
-            connection, accesMsg = downloadstation.testAuthentication(host, username, password)
+            accesMsg = downloadstation.testAuthentication(host, username, password)[1]
         elif torrent_method == 'deluge':
-            connection, accesMsg = deluge.testAuthentication(host, username, password)
+            accesMsg = deluge.testAuthentication(host, username, password)[1]
 
         return accesMsg   
     
@@ -1997,9 +1997,9 @@ class Home:
             pw_append = " with password: " + password
 
         if result:
-            return "Registered and Tested growl successfully " + urllib.unquote_plus(host) + pw_append
+            return "Registered and Tested growl successfully " + unquote_plus(host) + pw_append
         else:
-            return "Registration and Testing of growl failed " + urllib.unquote_plus(host) + pw_append
+            return "Registration and Testing of growl failed " + unquote_plus(host) + pw_append
 
     @cherrypy.expose
     def testProwl(self, prowl_api=None, prowl_priority=0):
@@ -2086,11 +2086,11 @@ class Home:
         finalResult = ''
 
         for curHost in [x.strip() for x in host.split(",")]:
-            curResult = notifiers.xbmc_notifier.test_notify(urllib.unquote_plus(curHost), username, password)
+            curResult = notifiers.xbmc_notifier.test_notify(unquote_plus(curHost), username, password)
             if len(curResult.split(":")) > 2 and 'OK' in curResult.split(":")[2]:
-                finalResult += "Test XBMC notice sent successfully to " + urllib.unquote_plus(curHost)
+                finalResult += "Test XBMC notice sent successfully to " + unquote_plus(curHost)
             else:
-                finalResult += "Test XBMC notice failed to " + urllib.unquote_plus(curHost)
+                finalResult += "Test XBMC notice failed to " + unquote_plus(curHost)
             finalResult += "<br />\n"
 
         return finalResult
@@ -2103,11 +2103,11 @@ class Home:
         finalResult = ''
 
         for curHost in [x.strip() for x in host.split(",")]:
-            curResult = notifiers.plex_notifier.test_notify(urllib.unquote_plus(curHost), username, password)
+            curResult = notifiers.plex_notifier.test_notify(unquote_plus(curHost), username, password)
             if len(curResult.split(":")) > 2 and 'OK' in curResult.split(":")[2]:
-                finalResult += "Test Plex notice sent successfully to " + urllib.unquote_plus(curHost)
+                finalResult += "Test Plex notice sent successfully to " + unquote_plus(curHost)
             else:
-                finalResult += "Test Plex notice failed to " + urllib.unquote_plus(curHost)
+                finalResult += "Test Plex notice failed to " + unquote_plus(curHost)
             finalResult += "<br />\n"
 
         return finalResult
@@ -2126,7 +2126,7 @@ class Home:
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
 
         host = config.clean_host(host)
-        result = notifiers.nmj_notifier.test_notify(urllib.unquote_plus(host), database, mount)
+        result = notifiers.nmj_notifier.test_notify(unquote_plus(host), database, mount)
         if result:
             return "Successfully started the scan update"
         else:
@@ -2137,7 +2137,7 @@ class Home:
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
 
         host = config.clean_host(host)
-        result = notifiers.nmj_notifier.notify_settings(urllib.unquote_plus(host))
+        result = notifiers.nmj_notifier.notify_settings(unquote_plus(host))
         if result:
             return '{"message": "Got settings from %(host)s", "database": "%(database)s", "mount": "%(mount)s"}' % {"host": host, "database": sickbeard.NMJ_DATABASE, "mount": sickbeard.NMJ_MOUNT}
         else:
@@ -2148,18 +2148,18 @@ class Home:
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
 
         host = config.clean_host(host)
-        result = notifiers.nmjv2_notifier.test_notify(urllib.unquote_plus(host))
+        result = notifiers.nmjv2_notifier.test_notify(unquote_plus(host))
         if result:
-            return "Test notice sent successfully to " + urllib.unquote_plus(host)
+            return "Test notice sent successfully to " + unquote_plus(host)
         else:
-            return "Test notice failed to " + urllib.unquote_plus(host)
+            return "Test notice failed to " + unquote_plus(host)
 
     @cherrypy.expose
     def settingsNMJv2(self, host=None, dbloc=None, instance=None):
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
 
         host = config.clean_host(host)
-        result = notifiers.nmjv2_notifier.notify_settings(urllib.unquote_plus(host), dbloc, instance)
+        result = notifiers.nmjv2_notifier.notify_settings(unquote_plus(host), dbloc, instance)
         if result:
             return '{"message": "NMJ Database found at: %(host)s", "database": "%(database)s"}' % {"host": host, "database": sickbeard.NMJv2_DATABASE}
         else:
@@ -2281,7 +2281,7 @@ class Home:
                 t.submenu.append({ 'title': 'Delete',               'path': 'home/deleteShow?show=%d' % showObj.tvdbid, 'confirm': True })
                 t.submenu.append({ 'title': 'Re-scan files',        'path': 'home/refreshShow?show=%d' % showObj.tvdbid })
                 t.submenu.append({ 'title': 'Force Full Update',    'path': 'home/updateShow?show=%d&amp;force=1' % showObj.tvdbid })
-                t.submenu.append({ 'title': 'Update show in XBMC',  'path': 'home/updateXBMC?showName=%s' % urllib.quote_plus(showObj.name.encode('utf-8')), 'requires': haveXBMC })
+                t.submenu.append({ 'title': 'Update show in XBMC',  'path': 'home/updateXBMC?showName=%s' % quote_plus(showObj.name.encode('utf-8')), 'requires': haveXBMC })
                 t.submenu.append({ 'title': 'Preview Rename',       'path': 'home/testRename?show=%d' % showObj.tvdbid })
 
         t.show = showObj

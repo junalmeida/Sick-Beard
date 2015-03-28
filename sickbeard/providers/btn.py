@@ -25,7 +25,6 @@ from sickbeard import scene_exceptions
 from sickbeard import logger
 from sickbeard import tvcache
 from sickbeard.helpers import sanitizeSceneName
-from sickbeard.common import Quality
 from sickbeard.exceptions import ex, AuthException
 
 from lib import jsonrpclib
@@ -118,7 +117,7 @@ class BTNProvider(generic.TorrentProvider):
 
             results = []
 
-            for torrentid, torrent_info in found_torrents.iteritems():
+            for dummy, torrent_info in found_torrents.iteritems():
                 (title, url) = self._get_title_and_url(torrent_info)
 
                 if title and url:

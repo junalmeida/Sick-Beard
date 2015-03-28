@@ -153,6 +153,6 @@ def testAuthentication(host, username, password):
         tc = transmissionrpc.Client(address, host.port, sickbeard.TORRENT_USERNAME, sickbeard.TORRENT_PASSWORD)
         return True, u"[Transmission] Success: Connected and Authenticated. RPC version: " + str(tc.rpc_version)
     except Exception, e:
-       return False, u"[Transmission] testAuthentication() Error: " + ex(e)
+        return False, u"[Transmission] testAuthentication() Error: " + ex(e)
 
 ###################################################################################################

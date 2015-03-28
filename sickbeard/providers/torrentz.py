@@ -16,20 +16,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
-import traceback
-import urllib
-import urllib2
 import re
-
-import xml.etree.cElementTree as etree
-
+import traceback
+try:
+    import xml.etree.cElementTree as ElementTree
+except ImportError:
+    from xml.etree import ElementTree
 import sickbeard
 import generic
 
-from sickbeard import encodingKludge as ek
-from sickbeard.common import *
 from sickbeard import logger, helpers
 from sickbeard import tvcache
 from sickbeard.helpers import sanitizeSceneName
@@ -115,7 +110,7 @@ class TORRENTZProvider(generic.TorrentProvider):
                     data = self.getURL(searchURL + "&p=%(page)d" % {'page': index })
 
                     if data and data.startswith("<?xml"):
-                        responseSoup = etree.ElementTree(etree.XML(data))
+                        responseSoup = ElementTree(ElementTree.XML(data))
                         newItems = responseSoup.getiterator('item')
                         oldCount = len(items)
                         items.extend(newItems)

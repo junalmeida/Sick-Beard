@@ -18,18 +18,13 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
 import json
-import urllib
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
-from xml.sax.saxutils import escape
 
 from sickbeard import db
 from sickbeard import logger
@@ -148,7 +143,7 @@ class TorrentDayProvider(generic.TorrentProvider):
                 logger.log("[" + self.name + "] _doSearch() search data sent 0 results.")
                 return []
             torrents = jdata.get('Fs', [])[0].get('Cn', {}).get('torrents', [])
-        except ValueError, e:
+        except ValueError:
             logger.log("[" + self.name + "] _doSearch() invalid json returned.")
             return []
 

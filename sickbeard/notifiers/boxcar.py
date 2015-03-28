@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2
+from urllib import urlencode
+from urllib2 import Request, URLError
 import time
 
 import sickbeard
@@ -51,12 +52,12 @@ class BoxcarNotifier:
 
         # if this is a subscription notification then act accordingly
         if subscribe:
-            data = urllib.urlencode({'email': email})
+            data = urlencode({'email': email})
             curUrl = curUrl + "/subscribe"
         
         # for normal requests we need all these parameters
         else:
-            data = urllib.urlencode({
+            data = urlencode({
                 'email': email,
                 'notification[from_screen_name]': title,
                 'notification[message]': msg.encode('utf-8'),
@@ -66,11 +67,11 @@ class BoxcarNotifier:
 
         # send the request to boxcar
         try:
-            req = urllib2.Request(curUrl)
-            handle = urllib2.urlopen(req, data)
+            req = Request(curUrl, data)
+            handle = sickbeard.helpers.getURLFileLike(req, throw_exc=True)
             handle.close()
             
-        except urllib2.URLError, e:
+        except URLError, e:
             # if we get an error back that doesn't have an error code then who knows what's really happening
             if not hasattr(e, 'code'):
                 logger.log("Boxcar notification failed." + ex(e), logger.ERROR)

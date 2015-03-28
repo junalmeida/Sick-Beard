@@ -17,11 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2,xml.dom.minidom
 from xml.dom.minidom import parseString
 import sickbeard
-import telnetlib
-import re
 import time
 
 from sickbeard import logger
@@ -56,8 +53,7 @@ class NMJv2Notifier:
         """
         try:
             url_loc = "http://" + host + ":8008/file_operation?arg0=list_user_storage_file&arg1=&arg2="+instance+"&arg3=20&arg4=true&arg5=true&arg6=true&arg7=all&arg8=name_asc&arg9=false&arg10=false"
-            req = urllib2.Request(url_loc)
-            handle1 = urllib2.urlopen(req)
+            handle1 = sickbeard.helpers.getURLFileLike(url_loc, throw_exc=True)
             response1 = handle1.read()
             xml = parseString(response1)
             time.sleep (300.0 / 1000.0)
@@ -65,8 +61,7 @@ class NMJv2Notifier:
                 xmlTag=node.toxml();
                 xmlData=xmlTag.replace('<path>','').replace('</path>','').replace('[=]','')
                 url_db = "http://" + host + ":8008/metadata_database?arg0=check_database&arg1="+ xmlData
-                reqdb = urllib2.Request(url_db)
-                handledb = urllib2.urlopen(reqdb)
+                handledb = sickbeard.helpers.getURLFileLike(url_db, throw_exc=True)
                 responsedb = handledb.read()
                 xmldb = parseString(responsedb)
                 returnvalue=xmldb.getElementsByTagName('returnValue')[0].toxml().replace('<returnValue>','').replace('</returnValue>','')
@@ -103,12 +98,10 @@ class NMJv2Notifier:
             logger.log(u"NMJ scan update command send to host: %s" % (host))
             url_updatedb = "http://" + host + ":8008/metadata_database?arg0=scanner_start&arg1="+ sickbeard.NMJv2_DATABASE +"&arg2=background&arg3="
             logger.log(u"Try to mount network drive via url: %s" % (host), logger.DEBUG)
-            prereq = urllib2.Request(url_scandir)
-            req = urllib2.Request(url_updatedb)
-            handle1 = urllib2.urlopen(prereq)
+            handle1 = sickbeard.helpers.getURLFileLike(url_scandir, throw_exc=True)
             response1 = handle1.read()
             time.sleep (300.0 / 1000.0)
-            handle2 = urllib2.urlopen(req)
+            handle2 = sickbeard.helpers.getURLFileLike(url_updatedb, throw_exc=True)
             response2 = handle2.read()
         except IOError, e:
             logger.log(u"Warning: Couldn't contact popcorn hour on host %s: %s" % (host, e))
@@ -117,8 +110,8 @@ class NMJv2Notifier:
             et = etree.fromstring(response1)
             result1 = et.findtext("returnValue")
         except SyntaxError, e:
-             logger.log(u"Unable to parse XML returned from the Popcorn Hour: update_scandir, %s" % (e), logger.ERROR)
-             return False
+            logger.log(u"Unable to parse XML returned from the Popcorn Hour: update_scandir, %s" % (e), logger.ERROR)
+            return False
         try:            
             et = etree.fromstring(response2)
             result2 = et.findtext("returnValue")

@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2
+from urllib import urlencode
+from urllib2 import Request, URLError
 import time
 
 import sickbeard
@@ -53,7 +54,7 @@ class PushoverNotifier:
         msg = msg.strip()
         curUrl = API_URL
 
-        data = urllib.urlencode({
+        data = urlencode({
             'token': API_KEY,
             'title': title,
             'user': userKey,
@@ -64,11 +65,11 @@ class PushoverNotifier:
 
         # send the request to pushover
         try:
-            req = urllib2.Request(curUrl)
-            handle = urllib2.urlopen(req, data)
+            req = Request(curUrl, data)
+            handle = sickbeard.helpers.getURLFileLike(req, throw_exc=True)
             handle.close()
             
-        except urllib2.URLError, e:
+        except URLError, e:
             # if we get an error back that doesn't have an error code then who knows what's really happening
             if not hasattr(e, 'code'):
                 logger.log("Pushover notification failed." + ex(e), logger.ERROR)

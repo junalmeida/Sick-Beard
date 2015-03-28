@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
-import urllib2
+from urllib import urlencode
+from urllib2 import Request, URLError
 import base64
 
 import sickbeard
@@ -61,12 +61,12 @@ class PLEXNotifier:
             if type(command[key]) == unicode:
                 command[key] = command[key].encode('utf-8')
 
-        enc_command = urllib.urlencode(command)
+        enc_command = urlencode(command)
         logger.log(u"Plex encoded API command: " + enc_command, logger.DEBUG)
 
         url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, enc_command)
         try:
-            req = urllib2.Request(url)
+            req = Request(url)
             # if we have a password, use authentication
             if password:
                 base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
@@ -76,7 +76,7 @@ class PLEXNotifier:
             else:
                 logger.log(u"Contacting Plex via url: " + url, logger.DEBUG)
 
-            response = urllib2.urlopen(req)
+            response = sickbeard.helpers.getURLFileLike(req, throw_exc=True)
 
             result = response.read().decode(sickbeard.SYS_ENCODING)
             response.close()
@@ -85,7 +85,7 @@ class PLEXNotifier:
             # could return result response = re.compile('<html><li>(.+\w)</html>').findall(result)
             return 'OK'
 
-        except (urllib2.URLError, IOError), e:
+        except (URLError, IOError), e:
             logger.log(u"Warning: Couldn't contact Plex at " + fixStupidEncodings(url) + " " + ex(e), logger.WARNING)
             return False
 
@@ -164,7 +164,7 @@ class PLEXNotifier:
 
             url = "http://%s/library/sections" % sickbeard.PLEX_SERVER_HOST
             try:
-                xml_sections = minidom.parse(urllib.urlopen(url))
+                xml_sections = minidom.parse(sickbeard.helpers.getURLFileLike(url, throw_exc=True))
             except IOError, e:
                 logger.log(u"Error while trying to contact Plex Media Server: " + ex(e), logger.ERROR)
                 return False
@@ -178,7 +178,7 @@ class PLEXNotifier:
                 if s.getAttribute('type') == "show":
                     url = "http://%s/library/sections/%s/refresh" % (sickbeard.PLEX_SERVER_HOST, s.getAttribute('key'))
                     try:
-                        urllib.urlopen(url)
+                        sickbeard.helpers.getURLFileLike(url, throw_exc=True)
                     except Exception, e:
                         logger.log(u"Error updating library section for Plex Media Server: " + ex(e), logger.ERROR)
                         return False

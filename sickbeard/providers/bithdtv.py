@@ -18,14 +18,11 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
-import urllib
+from urllib import quote
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
 from xml.sax.saxutils import escape
@@ -138,10 +135,10 @@ class BitHDTVProvider(generic.TorrentProvider):
         search_params = search_params.replace(" ","+")
         
         logger.log("[" + self.name + "] Searching TV Section")
-        self.parseResults(self.url + "torrents.php?search=" + urllib.quote(search_params) + "&cat=10")
+        self.parseResults(self.url + "torrents.php?search=" + quote(search_params) + "&cat=10")
         
         logger.log("[" + self.name + "] Searching TV Pack Section")
-        self.parseResults(self.url + "torrents.php?search=" + urllib.quote(search_params) + "&cat=12")
+        self.parseResults(self.url + "torrents.php?search=" + quote(search_params) + "&cat=12")
         
         if len(self.search_results):
             logger.log("[" + self.name + "] parseResults() Some results found.")
@@ -169,7 +166,7 @@ class BitHDTVProvider(generic.TorrentProvider):
         response = None
         
         if not self.session:
-             if not self._doLogin():
+            if not self._doLogin():
                 return response
             
         if not headers:
@@ -237,7 +234,7 @@ class BitHDTVCache(tvcache.TVCache):
                 "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
             
         for title, url in provider.search_results:
-            xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>" + urllib.quote(url,'/,:?') + "</link>" + "</item>"
+            xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>" + quote(url,'/,:?') + "</link>" + "</item>"
         xml += "</channel> </rss>"
         return xml
         

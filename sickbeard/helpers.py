@@ -27,9 +27,13 @@ import stat
 import StringIO
 import time
 import traceback
-import urllib
 import urllib2
+import cookielib
+import sys
+if sys.version_info >= (2, 7, 9):
+    import ssl
 import zlib
+from lib import MultipartPostHandler
 
 from httplib import BadStatusLine
 
@@ -45,19 +49,13 @@ try:
 except ImportError:
     import elementtree.ElementTree as etree
 
-import sickbeard
-
 from sickbeard.exceptions import MultipleShowObjectsException, ex
-from sickbeard import logger, classes
-from sickbeard.common import USER_AGENT, mediaExtensions, XML_NSMAP
+from sickbeard import logger
+from sickbeard.common import USER_AGENT, mediaExtensions 
 
 from sickbeard import db
 from sickbeard import encodingKludge as ek
 from sickbeard import notifiers
-
-from lib.tvdb_api import tvdb_api, tvdb_exceptions
-
-urllib._urlopener = classes.SickBeardURLopener()
 
 
 def indentXML(elem, level=0):
@@ -140,60 +138,130 @@ def sanitizeFileName(name):
     return name
 
 
-def getURL(url, post_data=None, headers=[]):
+def getURL(url, validate=False, cookies = cookielib.CookieJar(), password_mgr=None, throw_exc=False):
     """
-    Returns a byte-string retrieved from the url provider.
+    Convenience method to directly retrieve the contents of a url
     """
+    obj = getURLFileLike(url, validate, cookies, password_mgr, throw_exc)
+    if obj:
+        return readURLFileLike(obj)
+    else:
+        return None
 
-    opener = urllib2.build_opener()
-    opener.addheaders = [('User-Agent', USER_AGENT), ('Accept-Encoding', 'gzip,deflate')]
-    for cur_header in headers:
-        opener.addheaders.append(cur_header)
 
+def getURLFileLike(url, validate=False, cookies = cookielib.CookieJar(), password_mgr=None, throw_exc=False):
+    """
+    Returns a file-like object same as returned by urllib2.urlopen but with Handlers configured for sickbeard.
+    
+    It allows for the use of cookies, multipart/form-data, https without certificate validation and both basic
+    and digest HTTP authentication. In addition, the user-agent is set to the sickbeard default and accepts
+    gzip and deflate encoding (which can be automatically handled when using readURL() to retrieve the contents).
+    It also has a default timeout set to 30 seconds.
+    
+    @param url: can be either a string or a Request object.
+    @param validate: defines if SSL certificates should be validated on HTTPS connections
+    @param cookies: is the cookielib.CookieJar in which cookies are stored.
+    @param password_mgr: if given, should be something that is compatible with HTTPPasswordMgr
+    @param throw_exc: throw the exception that was caught instead of None
+    @return: the file-like object retrieved from the URL or None (or the exception) if it could not be retrieved
+    """
+    # get the name string for logging purposes
+    if isinstance(url, urllib2.Request):
+        name = url.get_full_url()
+    else:
+        name = url
+    
+    # configure the OpenerDirector appropriately
+    if not validate and sys.version_info >= (2, 7, 9):
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies),
+                                          MultipartPostHandler.MultipartPostHandler,
+                                          urllib2.HTTPSHandler(context=ssl._create_unverified_context()),
+                                          urllib2.HTTPDigestAuthHandler(password_mgr),
+                                          urllib2.HTTPBasicAuthHandler(password_mgr))
+    else:
+        # Before python 2.7.9, there was no built-in way to validate SSL certificates
+        # Since our default is not to validate, it is of low priority to make it available here
+        if validate and sys.version_info < (2, 7, 9):
+            logger.log(u"The SSL certificate will not be validated for " + name + u"(python 2.7.9+ required)", logger.MESSAGE)
+
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies),
+                                      MultipartPostHandler.MultipartPostHandler,
+                                      urllib2.HTTPDigestAuthHandler(password_mgr),
+                                      urllib2.HTTPBasicAuthHandler(password_mgr))
+
+    # set the default headers for every request
+    opener.addheaders = [('User-Agent', USER_AGENT), 
+                         ('Accept-Encoding', 'gzip,deflate')]
+        
     try:
-        usock = opener.open(url, post_data)
-        url = usock.geturl()
-        encoding = usock.info().get("Content-Encoding")
-
-        if encoding in ('gzip', 'x-gzip', 'deflate'):
-            content = usock.read()
-            if encoding == 'deflate':
-                data = StringIO.StringIO(zlib.decompress(content))
-            else:
-                data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
-            result = data.read()
-
-        else:
-            result = usock.read()
-
-        usock.close()
+        # open the URL with a default timeout of 30 seconds
+        return opener.open(url, timeout=30)
 
     except urllib2.HTTPError, e:
-        logger.log(u"HTTP error " + str(e.code) + " while loading URL " + url, logger.WARNING)
-        return None
+        logger.log(u"HTTP error " + str(e.code) + u" while loading URL " + name, logger.WARNING)
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except urllib2.URLError, e:
-        logger.log(u"URL error " + str(e.reason) + " while loading URL " + url, logger.WARNING)
-        return None
+        logger.log(u"URL error " + str(e.reason) + u" while loading URL " + name, logger.WARNING)
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except BadStatusLine:
-        logger.log(u"BadStatusLine error while loading URL " + url, logger.WARNING)
-        return None
+        logger.log(u"BadStatusLine error while loading URL " + name, logger.WARNING)
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except socket.timeout:
-        logger.log(u"Timed out while loading URL " + url, logger.WARNING)
-        return None
+        logger.log(u"Timed out while loading URL " + name, logger.WARNING)
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except ValueError:
-        logger.log(u"Unknown error while loading URL " + url, logger.WARNING)
-        return None
+        logger.log(u"Unknown error while loading URL " + name, logger.WARNING)
+        if throw_exc:
+            raise 
+        else:
+            return None
 
     except Exception:
-        logger.log(u"Unknown exception while loading URL " + url + ": " + traceback.format_exc(), logger.WARNING)
-        return None
+        logger.log(u"Unknown exception while loading URL " + name + u": " + traceback.format_exc(), logger.WARNING)
+        if throw_exc:
+            raise 
+        else:
+            return None
 
-    return result
+def readURLFileLike(urlFileLike):
+    """
+    Return the contents of the file like objects as string, performing decompression if necessary.
+    
+    @param urlFileLike: is a file like objects same as returned by urllib2.urlopen() and getURL()
+    @return a string representing the data retrieved from the URL
+    """
+    encoding = urlFileLike.info().get("Content-Encoding")
 
+    if encoding in ('gzip', 'x-gzip', 'deflate'):
+        content = urlFileLike.read()
+        if encoding == 'deflate':
+            data = StringIO.StringIO(zlib.decompress(content))
+        else:
+            data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
+        result = data.read()
+
+    else:
+        result = urlFileLike.read()
+
+    urlFileLike.close()
+    
+    return result;
 
 def findCertainShow(showList, tvdbid):
     results = filter(lambda x: x.tvdbid == tvdbid, showList)
@@ -258,7 +326,7 @@ def searchDBForShow(regShowName):
                 logger.log(u"Unable to match a record in the DB for " + showName, logger.DEBUG)
                 continue
             elif len(sqlResults) > 1:
-                logger.log(u"Multiple results for " + showName + " in the DB, unable to match show name", logger.DEBUG)
+                logger.log(u"Multiple results for " + showName + u" in the DB, unable to match show name", logger.DEBUG)
                 continue
             else:
                 return (int(sqlResults[0]["tvdb_id"]), sqlResults[0]["show_name"])
@@ -327,16 +395,16 @@ def make_dirs(path):
     parents
     """
 
-    logger.log(u"Checking if the path " + path + " already exists", logger.DEBUG)
+    logger.log(u"Checking if the path " + path + u" already exists", logger.DEBUG)
 
     if not ek.ek(os.path.isdir, path):
         # Windows, create all missing folders
         if os.name == 'nt' or os.name == 'ce':
             try:
-                logger.log(u"Folder " + path + " didn't exist, creating it", logger.DEBUG)
+                logger.log(u"Folder " + path + u" didn't exist, creating it", logger.DEBUG)
                 ek.ek(os.makedirs, path)
             except (OSError, IOError), e:
-                logger.log(u"Failed creating " + path + " : " + ex(e), logger.ERROR)
+                logger.log(u"Failed creating " + path + u" : " + ex(e), logger.ERROR)
                 return False
 
         # not Windows, create all missing folders and set permissions
@@ -353,14 +421,14 @@ def make_dirs(path):
                     continue
 
                 try:
-                    logger.log(u"Folder " + sofar + " didn't exist, creating it", logger.DEBUG)
+                    logger.log(u"Folder " + sofar + u" didn't exist, creating it", logger.DEBUG)
                     ek.ek(os.mkdir, sofar)
                     # use normpath to remove end separator, otherwise checks permissions against itself
                     chmodAsParent(ek.ek(os.path.normpath, sofar))
                     # do the library update for synoindex
                     notifiers.synoindex_notifier.addFolder(sofar)
                 except (OSError, IOError), e:
-                    logger.log(u"Failed creating " + sofar + " : " + ex(e), logger.ERROR)
+                    logger.log(u"Failed creating " + sofar + u" : " + ex(e), logger.ERROR)
                     return False
 
     return True
@@ -391,10 +459,10 @@ def rename_ep_file(cur_path, new_path, old_path_length=0):
 
     # move the file
     try:
-        logger.log(u"Renaming file from " + cur_path + " to " + new_path)
+        logger.log(u"Renaming file from " + cur_path + u" to " + new_path)
         ek.ek(os.rename, cur_path, new_path)
     except (OSError, IOError), e:
-        logger.log(u"Failed renaming " + cur_path + " to " + new_path + ": " + ex(e), logger.ERROR)
+        logger.log(u"Failed renaming " + cur_path + u" to " + new_path + ": " + ex(e), logger.ERROR)
         return False
 
     # clean up any old folders that are empty
@@ -430,7 +498,7 @@ def delete_empty_folders(check_empty_dir, keep_dir=None):
                 # do the library update for synoindex
                 notifiers.synoindex_notifier.deleteFolder(check_empty_dir)
             except OSError, e:
-                logger.log(u"Unable to delete " + check_empty_dir + ": " + repr(e) + " / " + str(e), logger.WARNING)
+                logger.log(u"Unable to delete " + check_empty_dir + u": " + repr(e) + u" / " + str(e), logger.WARNING)
                 break
             check_empty_dir = ek.ek(os.path.dirname, check_empty_dir)
         else:
@@ -444,7 +512,7 @@ def chmodAsParent(childPath):
     parentPath = ek.ek(os.path.dirname, childPath)
 
     if not parentPath:
-        logger.log(u"No parent path provided in " + childPath + ", unable to get permissions from it", logger.DEBUG)
+        logger.log(u"No parent path provided in " + childPath + u", unable to get permissions from it", logger.DEBUG)
         return
 
     parentMode = stat.S_IMODE(os.stat(parentPath)[stat.ST_MODE])
@@ -464,7 +532,7 @@ def chmodAsParent(childPath):
     user_id = os.geteuid()  # @UndefinedVariable - only available on UNIX
 
     if user_id != 0 and user_id != childPath_owner:
-        logger.log(u"Not running as root or owner of " + childPath + ", not trying to set permissions", logger.DEBUG)
+        logger.log(u"Not running as root or owner of " + childPath + u", not trying to set permissions", logger.DEBUG)
         return
 
     try:
@@ -502,7 +570,7 @@ def fixSetGroupID(childPath):
         user_id = os.geteuid()  # @UndefinedVariable - only available on UNIX
 
         if user_id != 0 and user_id != childPath_owner:
-            logger.log(u"Not running as root or owner of " + childPath + ", not trying to set the set-group-ID", logger.DEBUG)
+            logger.log(u"Not running as root or owner of " + childPath + u", not trying to set the set-group-ID", logger.DEBUG)
             return
 
         try:
@@ -611,7 +679,7 @@ def parse_xml(data, del_xmlns=False):
     try:
         parsedXML = etree.fromstring(data)
     except Exception, e:
-        logger.log(u"Error trying to parse xml data: " + data + " to Elementtree, Error: " + ex(e), logger.DEBUG)
+        logger.log(u"Error trying to parse xml data: " + data + u" to Elementtree, Error: " + ex(e), logger.DEBUG)
         parsedXML = None
 
     return parsedXML
@@ -651,22 +719,22 @@ def backupVersionedFile(old_file, version):
 
     while not ek.ek(os.path.isfile, new_file):
         if not ek.ek(os.path.isfile, old_file):
-            logger.log(u"Not creating backup, " + old_file + " doesn't exist", logger.DEBUG)
+            logger.log(u"Not creating backup, " + old_file + u" doesn't exist", logger.DEBUG)
             break
 
         try:
-            logger.log(u"Trying to back up " + old_file + " to " + new_file, logger.DEBUG)
+            logger.log(u"Trying to back up " + old_file + u" to " + new_file, logger.DEBUG)
             shutil.copy(old_file, new_file)
             logger.log(u"Backup done", logger.DEBUG)
             break
         except Exception, e:
-            logger.log(u"Error while trying to back up " + old_file + " to " + new_file + " : " + ex(e), logger.WARNING)
+            logger.log(u"Error while trying to back up " + old_file + u" to " + new_file + " : " + ex(e), logger.WARNING)
             numTries += 1
             time.sleep(1)
             logger.log(u"Trying again.", logger.DEBUG)
 
         if numTries >= 10:
-            logger.log(u"Unable to back up " + old_file + " to " + new_file + " please do it manually.", logger.ERROR)
+            logger.log(u"Unable to back up " + old_file + u" to " + new_file + u" please do it manually.", logger.ERROR)
             return False
 
     return True

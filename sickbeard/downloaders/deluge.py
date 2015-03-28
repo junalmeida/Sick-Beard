@@ -16,9 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2, cookielib, StringIO, gzip
-import httplib
-import re
+from urllib2 import Request, HTTPPasswordMgrWithDefaultRealm
 
 try:
     import json
@@ -27,44 +25,10 @@ except ImportError:
 
 import sickbeard
 from sickbeard import logger
-from sickbeard.exceptions import ex
-from urlparse import urlparse
+from sickbeard import helpers
 
 RPC_URL = "json"
 
-def _makeOpener(host, username, password):  
-    auth_handler = urllib2.HTTPBasicAuthHandler()
-    auth_handler.add_password(realm='deluge',
-                              uri=host,
-                              user=username,
-                              passwd=password)
-    opener = urllib2.build_opener(auth_handler)
-    urllib2.install_opener(opener)
-
-    cookie_jar = cookielib.CookieJar()
-    cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
-
-    handlers = [auth_handler, cookie_handler]
-    deluge_request = urllib2.build_opener(*handlers)
-    
-    headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-type': 'application/json', 'Accept-encoding': 'gzip'}    
-    post_data = json.dumps({"method": "auth.login",
-                            "params": [password],
-                            "id": 1
-                           })
-    request = urllib2.Request(host, post_data, headers)
-    response = deluge_request.open(request)
-    auth_data = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
-    jsonObject = json.loads(auth_data.read())
-    if jsonObject["error"]:
-        deluge_request = None
-        raise Exception("Deluge unknown Error." + str(jsonObject["error"]))
-    if jsonObject["result"] == False:
-        deluge_request = None
-        raise Exception("Deluge unauthorized. Check your password.")
-
-    return deluge_request
-    
 def _request(data):
     host = sickbeard.TORRENT_HOST
     if not host.endswith("/"):
@@ -72,14 +36,18 @@ def _request(data):
     host += RPC_URL
     password = sickbeard.TORRENT_PASSWORD
     
-    opener = _makeOpener(host, None, password)
-
+    # create a password manager with the required password for the deluge realm
+    pw_mgr = HTTPPasswordMgrWithDefaultRealm()
+    pw_mgr.add_password(realm='deluge', uri=host, user=None, passwd=password)
+    # create the request with the provided data
     post_data = json.dumps(data)
-    request = urllib2.Request(host, post_data, {})
-    response = opener.open(request)
-    result_data = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
-    jsonObject = json.loads(result_data.read())
-    return jsonObject
+    request = Request(host, data=post_data, headers={})
+    
+    # test the authentication before executing the request
+    if (testAuthentication(host, None, password)):
+        return helpers.getURL(request, password_mgr=pw_mgr)
+    else:
+        return None
 
     
 def sendTORRENT(torrent):    
@@ -106,32 +74,32 @@ def sendTORRENT(torrent):
         
         result = _request(post_data)
         if result and not result["error"]:
-            hash = result["result"]
+            resultHash = result["result"]
             if paused:
                 post_data = {"method": "core.pause_torrent",
-                             "params": [[hash]],
+                             "params": [[resultHash]],
                              "id": 5
                             }
                 result = _request(post_data)
             if not (download_dir == ''):
                 post_data = {"method": "core.set_torrent_move_completed",
-                             "params": [hash, True],
+                             "params": [resultHash, True],
                              "id": 3
                             }        
                 result = _request(post_data)
                 post_data = {"method": "core.set_torrent_move_completed_path",
-                             "params": [hash, download_dir],
+                             "params": [resultHash, download_dir],
                              "id": 4
                             }
                 result = _request(post_data)
             if ratio:
                 post_data = {"method": "core.set_torrent_stop_at_ratio",
-                             "params": [hash, True],
+                             "params": [resultHash, True],
                              "id": 6
                             }        
                 result = _request(post_data)
                 post_data = {"method": "core.set_torrent_stop_ratio",
-                             "params": [hash,float(ratio)],
+                             "params": [resultHash,float(ratio)],
                              "id": 7
                             }     
                 result = _request(post_data)
@@ -150,19 +118,25 @@ def testAuthentication(host, username, password):
         host += "/"
     host += RPC_URL
     try:    
-        opener = _makeOpener(host, username, password)
-        
+        # create headers required for authentication
         headers = {'X-Requested-With': 'XMLHttpRequest', 'Content-type': 'application/json', 'Accept-encoding': 'gzip'}
+        # create a password manager with the required password for the deluge realm
+        pw_mgr = HTTPPasswordMgrWithDefaultRealm()
+        pw_mgr.add_password(realm='deluge', uri=host, user=None, passwd=password)
+        # create the request with the provided data
         post_data = json.dumps({"method": "auth.login",
                                 "params": [password],
                                 "id": 1
                                 })
-        request = urllib2.Request(host, post_data, headers)
-    
-
-        response = opener.open(request)
-        data = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
-        jsonObject = json.loads(data.read())
-        return True, u"Connected and authenticated."
+        request = Request(host, post_data, headers)
+        auth_data = helpers.getURL(request, password_mgr=pw_mgr, throw_exc=True)
+        # read the json data retrieved from the URL
+        jsonObject = json.loads(auth_data.read())
+        if jsonObject["error"]:
+            raise Exception("Deluge unknown Error." + str(jsonObject["error"]))
+        elif jsonObject["result"] == False:
+            raise Exception("Deluge unauthorized. Check your password.")
+        else:
+            return True, u"Connected and authenticated."
     except Exception, e:
         return False, u"Cannot connect to Deluge: " + str(e)

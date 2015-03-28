@@ -18,14 +18,11 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
-import urllib
+from urllib import quote
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
 from xml.sax.saxutils import escape
@@ -136,7 +133,7 @@ class RevolutionTTProvider(generic.TorrentProvider):
         results=[]
         logger.log("[" + self.name + "] Performing Search: {0}".format(search_params))
         for section in [41,42,45]:
-            searchUrl = self.url + "browse.php?search=" + urllib.quote(search_params) + "&cat=" + str(section) + "&titleonly=1"
+            searchUrl = self.url + "browse.php?search=" + quote(search_params) + "&cat=" + str(section) + "&titleonly=1"
             results.extend(self.parseResults(searchUrl))
         if len(results):
             logger.log("[" + self.name + "] parseResults() Some results found.")
@@ -163,7 +160,7 @@ class RevolutionTTProvider(generic.TorrentProvider):
         response = None
         
         if not self.session:
-             if not self._doLogin():
+            if not self._doLogin():
                 return response
                        
         try:
@@ -234,7 +231,7 @@ class RevolutionTTCache(tvcache.TVCache):
             "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
             
             for title, url in data:
-                xml += "<item>" + "<title>" + escape(title.decode('utf8','ignore')) + "</title>" +  "<link>"+ urllib.quote(url,'/,:') + "</link>" + "</item>"
+                xml += "<item>" + "<title>" + escape(title.decode('utf8','ignore')) + "</title>" +  "<link>"+ quote(url,'/,:') + "</link>" + "</item>"
             xml += "</channel></rss>"
         return xml
         

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2
+from urllib import urlencode
 import sickbeard
 import telnetlib
 import re
@@ -108,9 +108,8 @@ class NMJNotifier:
         # if a mount URL is provided then attempt to open a handle to that URL
         if mount:
             try:
-                req = urllib2.Request(mount)
                 logger.log(u"Try to mount network drive via url: %s" % (mount), logger.DEBUG)
-                handle = urllib2.urlopen(req)
+                handle = sickbeard.helpers.getURLFileLike(mount, throw_exc=True)
             except IOError, e:
                 logger.log(u"Warning: Couldn't contact popcorn hour on host %s: %s" % (host, e))
                 return False
@@ -122,14 +121,13 @@ class NMJNotifier:
             "arg1": database,
             "arg2": "background",
             "arg3": ""}
-        params = urllib.urlencode(params)
+        params = urlencode(params)
         updateUrl = UPDATE_URL % {"host": host, "params": params}
 
         # send the request to the server
         try:
-            req = urllib2.Request(updateUrl)
             logger.log(u"Sending NMJ scan update command via url: %s" % (updateUrl), logger.DEBUG)
-            handle = urllib2.urlopen(req)
+            handle = sickbeard.helpers.getURLFileLike(updateUrl, throw_exc=True)
             response = handle.read()
         except IOError, e:
             logger.log(u"Warning: Couldn't contact Popcorn Hour on host %s: %s" % (host, e))

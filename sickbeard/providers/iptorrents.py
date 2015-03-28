@@ -18,14 +18,11 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import os
 import re
-import sys
-import urllib
+from urllib import quote
 import generic
 import datetime
 import sickbeard
-import exceptions
 
 from lib import requests
 from xml.sax.saxutils import escape
@@ -33,7 +30,6 @@ from xml.sax.saxutils import escape
 from sickbeard.common import Quality
 from sickbeard import logger
 from sickbeard import tvcache
-from sickbeard import helpers
 from sickbeard import show_name_helpers
 from sickbeard import db
 from sickbeard.common import Overview
@@ -130,7 +126,7 @@ class IPTorrentsProvider(generic.TorrentProvider):
 
     def _doSearch(self, search_params, show=None):
         logger.log("[IPTorrents] Performing Search: {0}".format(search_params))
-        searchUrl = self.url + "torrents/?l78=&l79=&l5=&q=" + urllib.quote(search_params)
+        searchUrl = self.url + "torrents/?l78=&l79=&l5=&q=" + quote(search_params)
         return self.parseResults(searchUrl)
     
     ################################################################################################### 
@@ -161,7 +157,7 @@ class IPTorrentsProvider(generic.TorrentProvider):
         response = None
         
         if not self.session:
-             if not self._doLogin():
+            if not self._doLogin():
                 return response
             
         if not headers:
@@ -234,7 +230,7 @@ class IPTorrentsCache(tvcache.TVCache):
             "<atom:link href=\"" + provider.url + "\" rel=\"self\" type=\"application/rss+xml\"/>"
             
             for title, url in data:
-                xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ urllib.quote(url,'/,:') + "</link>" + "</item>"
+                xml += "<item>" + "<title>" + escape(title) + "</title>" +  "<link>"+ quote(url,'/,:') + "</link>" + "</item>"
             xml += "</channel></rss>"
         return xml
 

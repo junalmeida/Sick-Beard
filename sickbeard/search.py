@@ -40,8 +40,6 @@ from sickbeard.exceptions import ex
 from sickbeard.providers.generic import GenericProvider
 
 
-import urllib2
-
 def _downloadResult(result):
     """
     Downloads a result to the appropriate black hole folder.
@@ -125,7 +123,7 @@ def snatchEpisode(result, endStatus=SNATCHED):
             allUrls = result.url.split(";", 3)
             for url in allUrls:
                 try:
-                    urllib2.urlopen(url)
+                    helpers.getURLFileLike(url, throw_exc=True)
                     result.url = url
                     break
                 except Exception:

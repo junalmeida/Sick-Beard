@@ -18,21 +18,16 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################################################################
 
-import re
-import urllib, urllib2, cookielib
+from urllib2 import HTTPError
 import sys
 import datetime
-import os
-import exceptions
 import sickbeard
 import generic
 import json
 
 from operator import itemgetter
-from xml.sax.saxutils import escape
 from sickbeard.common import Quality
 from sickbeard import logger
-from sickbeard import tvcache
 from sickbeard import helpers
 from sickbeard import show_name_helpers
 from sickbeard import db
@@ -177,8 +172,8 @@ class BTDIGGProvider(generic.TorrentProvider):
         logger.log("[BTDigg] Requesting - " + url)
         try:
             #response = helpers.getURL(url, headers)
-            response = urllib.urlopen(url)
-        except (urllib2.HTTPError, IOError, Exception), e:
+            response = helpers.getURLFileLike(url, throw_exc=True)
+        except (HTTPError, IOError, Exception), e:
             logger.log("[BTDigg] getURL() Error loading " + self.name + " URL: " + str(sys.exc_info()) + " - " + ex(e), logger.ERROR)
             return None
         return response
