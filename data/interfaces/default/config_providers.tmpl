@@ -87,7 +87,7 @@
                                 <span class="component-title jumbo">Configure Provider:</span>
                                 <span class="component-desc">
                                     #set $provider_config_list = []
-                                    #for $cur_provider in sorted(("btn", "hdbits", "omgwtfnzbs", "tvtorrents", "torrentleech", "thepiratebay", "torrentz", "torrentday", "sceneaccess", "iptorrents", "bithdtv", "torrentshack","speed","kickass","revolutiontt")):
+                                    #for $cur_provider in sorted(("btn", "hdbits", "omgwtfnzbs", "tvtorrents", "torrentleech", "thepiratebay", "torrentz", "torrentday", "sceneaccess", "iptorrents", "bithdtv", "torrentshack","speed","kickass","revolutiontt","demonoid")):
                                         #set $cur_provider_obj = $sickbeard.providers.getProviderClass($cur_provider)
                                         #if $cur_provider_obj.providerType == $GenericProvider.NZB and not $sickbeard.USE_NZBS:
                                             #continue
@@ -142,7 +142,7 @@
                             </label>
                         </div>
                     </div><!-- /omgwtfnzbsDiv //-->
-                    
+
                     <div class="providerDiv" id="bithdtvDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -157,7 +157,22 @@
                             </label>
                         </div>
                     </div><!-- /bithdtvDiv //-->
-                    
+
+                    <div class="providerDiv" id="demonoidDiv">
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Username:</span>
+                                <input class="component-desc" type="text" name="demonoid_username" value="$sickbeard.DEMONOID_USERNAME" size="40" />
+                            </label>
+                        </div>
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Password:</span>
+                                <input class="component-desc" type="password" name="demonoid_password" value="$sickbeard.DEMONOID_PASSWORD" size="40" />
+                            </label>
+                        </div>
+                    </div><!-- /demonoidDiv //-->
+
                     <div class="providerDiv" id="hdbitsDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -187,7 +202,7 @@
                             </label>
                         </div>
                     </div><!-- /tvtorrentsDiv //-->
-                    
+
 		    <div class="providerDiv" id="thepiratebayDiv">
                         <div class="field-pair">
                             <input type="checkbox" class="enabler" name="thepiratebay_proxy" id="thepiratebay_proxy" #if $sickbeard.THEPIRATEBAY_PROXY then "checked=\"checked\"" else ""#/>
@@ -196,7 +211,7 @@
                                 <span class="component-desc">To bypass Country Blocking Mechanism</span>
                             </label>
                         </div>
-                        
+
                         <div class="field-pair" id="content_thepiratebay_proxy">
                             <label class="nocheck clearfix">
                                 <span class="component-title">Proxy URL:</span>
@@ -209,7 +224,7 @@
                                	</span>
                             </label>
                         </div>
-                        
+
                         <div class="field-pair">
                             <input type="checkbox" class="enabler" name="thepiratebay_url_override_enable" id="thepiratebay_url_override_enable" #if $sickbeard.THEPIRATEBAY_URL_OVERRIDE then "checked=\"checked\"" else ""#/>
                             <label class="clearfix" for="thepiratebay_url_override_enable">
@@ -217,14 +232,14 @@
                                 <span class="component-desc">To bypass Country Blocking Mechanism,list of examples of alternative sites at <a href="http://proxybay.info" target="_blank">http://proxybay.info</a></span>
                             </label>
                         </div>
-                        
+
                         <div class="field-pair" id="content_thepiratebay_url_override_enable">
                             <label class="nocheck clearfix">
                                 <span class="component-title">URL Override:</span>
                                 <span class="component-desc"><input type="text" name="thepiratebay_url_override" value="$sickbeard.THEPIRATEBAY_URL_OVERRIDE" size="40" /></span>
                             </label>
                         </div>
-                        
+
                         <div class="field-pair">
                             <input type="checkbox" name="thepiratebay_trusted" id="thepiratebay_trusted" #if $sickbeard.THEPIRATEBAY_TRUSTED then "checked=\"checked\"" else ""#/>
                             <label class="clearfix" for="thepiratebay_trusted">
@@ -233,7 +248,7 @@
                             </label>
                         </div>
                     </div><!-- /thepiratebayDiv //-->
-                     
+
                     <div class="providerDiv" id="btnDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -252,7 +267,7 @@
                             </label>
                         </div>
 		    </div><!-- /torrentzDiv //-->
-                    
+
                     <div class="providerDiv" id="kickassDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -274,7 +289,7 @@
                             </label>
                         </div>
                     </div><!-- /KickAssDiv //-->
-                    
+
                     <div class="providerDiv" id="torrentdayDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -288,7 +303,7 @@
                                 <input class="component-desc" type="password" name="torrentday_password" value="$sickbeard.TORRENTDAY_PASSWORD" size="40" />
                             </label>
                         </div>
-                        
+
                         <div class="field-pair">
                             <input type="checkbox" name="torrentday_alt_url" id="torrentday_alt_url" #if $sickbeard.TORRENTDAY_ALT_URL then "checked=\"checked\"" else ""#/>
                             <label class="clearfix" for="torrentday_alt_url">
@@ -297,7 +312,7 @@
                             </label>
                         </div>
                     </div><!-- /torrentdayDiv //-->
-                
+
                     <div class="providerDiv" id="torrentleechDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -313,7 +328,7 @@
                             </label>
                         </div>
                     </div><!-- /torrentleechDiv //-->
-                    
+
                     <div class="providerDiv" id="sceneaccessDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -334,7 +349,7 @@
                             </label>
                         </div>
                     </div><!-- /sceneaccessDiv //-->
-                    
+
                     <div class="providerDiv" id="iptorrentsDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -364,7 +379,7 @@
                             <span class="component-title"><i>Note: options with (*) are optional, this is generated from </i><a href="http://www.iptorrents.com/getrss.php" target="_blank">http://www.iptorrents.com/getrss.php</a></span>
                         </div>
                     </div><!-- /iptorrentsDiv //-->
-                    
+
                     <div class="providerDiv" id="torrentshackDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -406,8 +421,8 @@
                             <span class="component-title"><i>Note: options with (*) are optional, these variables can gathered from </i><a href="http://torrentshack.net/rss.php" target="_blank">http://torrentshack.net/rss.php</a> and clicking on a link</span>
                         </div>
                     </div><!-- /torrentshackDiv //-->
-                    
-                    <div class="providerDiv" id="speedDiv">
+
+                    <div class="providerDiv" id="Div">
                         <div class="field-pair">
                             <label class="clearfix">
                                 <span class="component-title">Username:</span>
@@ -427,7 +442,7 @@
                             </label>
                         </div>
                     </div><!-- /speedDiv //-->
-                    
+
                     <div class="providerDiv" id="revolutionttDiv">
                         <div class="field-pair">
                             <label class="clearfix">
@@ -452,7 +467,7 @@
                         </div>
                     </div><!-- /revolutionttDiv //-->
 <!-- end div for editing providers -->
-            
+
                     </fieldset>
 #if $sickbeard.USE_NZBS:
                 </div><!-- /component-group2 //-->
@@ -506,7 +521,7 @@
             </div>
             <div id="newznab_update_div" style="display: none;">
             </div>
-            </div> 
+            </div>
 </div>
 
                     </fieldset>

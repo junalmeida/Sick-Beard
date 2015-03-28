@@ -33,6 +33,7 @@ __all__ = ['ezrss',
            'btdigg',
            'torrentshack',
            'speed',
+           'demonoid',
            'revolutiontt'
            ]
 

@@ -1004,6 +1004,7 @@ class ConfigProviders:
                       sceneaccess_username = None, sceneaccess_password = None, sceneaccess_rsshash = None,
                       iptorrents_username = None, iptorrents_password = None,iptorrents_uid = None, iptorrents_rsshash = None,
                       bithdtv_username = None, bithdtv_password = None,
+                      demonoid_username = None, demonoid_password = None,
                       torrentshack_username = None, torrentshack_password = None, torrentshack_uid = None, torrentshack_auth = None, torrentshack_pass_key = None, torrentshack_auth_key = None,
                       torrentz_verified = None,
                       speed_username = None, speed_password = None, speed_rsshash = None,
@@ -1075,7 +1076,7 @@ class ConfigProviders:
             elif curProvider == 'torrentz':
                 sickbeard.TORRENTZ = curEnabled
             elif curProvider == 'thepiratebay':
-                sickbeard.THEPIRATEBAY = curEnabled 
+                sickbeard.THEPIRATEBAY = curEnabled
             elif curProvider == 'tvtorrents':
                 sickbeard.TVTORRENTS = curEnabled
             elif curProvider == 'torrentleech':
@@ -1092,6 +1093,8 @@ class ConfigProviders:
                 sickbeard.BTDIGG = curEnabled
             elif curProvider == 'torrentshack':
                 sickbeard.TORRENTSHACK = curEnabled
+            elif curProvider == 'demonoid':
+                sickbeard.DEMONOID = curEnabled
             elif curProvider == 'speed':
                 sickbeard.SPEED = curEnabled
             elif curProvider == 'revolutiontt':
@@ -1115,16 +1118,16 @@ class ConfigProviders:
             thepiratebay_trusted = 0
 
         sickbeard.THEPIRATEBAY_TRUSTED = thepiratebay_trusted
-        
-        if thepiratebay_proxy == "on": 
+
+        if thepiratebay_proxy == "on":
             thepiratebay_proxy = 1
             sickbeard.THEPIRATEBAY_PROXY_URL = thepiratebay_proxy_url.strip()
         else:
             thepiratebay_proxy = 0
             sickbeard.THEPIRATEBAY_PROXY_URL = ""
-            
+
         sickbeard.THEPIRATEBAY_PROXY = thepiratebay_proxy
-        
+
         if thepiratebay_url_override_enable == "on":
             thepiratebay_url_override_enable = 1
             thepiratebay_url_override = thepiratebay_url_override.strip()
@@ -1134,7 +1137,7 @@ class ConfigProviders:
         else:
             thepiratebay_url_override_enable = 0
             sickbeard.THEPIRATEBAY_URL_OVERRIDE = ""
-            
+
         sickbeard.KICKASS_ALT_URL = kickass_alt_url.strip()
 
         if kickass_verified == "on":
@@ -1143,44 +1146,47 @@ class ConfigProviders:
             kickass_verified = 0
 
         sickbeard.KICKASS_VERIFIED = kickass_verified
- 
+
         sickbeard.TORRENTLEECH_USERNAME = torrentleech_username
         sickbeard.TORRENTLEECH_PASSWORD = torrentleech_password
-        
+
         if sickbeard.TORRENTDAY_ALT_URL == "on":
             sickbeard.TORRENTDAY_ALT_URL = 1
         else:
             sickbeard.TORRENTDAY_ALT_URL = 0
         sickbeard.TORRENTDAY_USERNAME = torrentday_username.strip()
         sickbeard.TORRENTDAY_PASSWORD = torrentday_password.strip()
-        
+
         sickbeard.SCENEACCESS_USERNAME = sceneaccess_username.strip()
         sickbeard.SCENEACCESS_PASSWORD = sceneaccess_password.strip()
         sickbeard.SCENEACCESS_RSSHASH = sceneaccess_rsshash.strip()
-        
+
         sickbeard.IPTORRENTS_USERNAME = iptorrents_username.strip()
         sickbeard.IPTORRENTS_PASSWORD = iptorrents_password.strip()
         sickbeard.IPTORRENTS_UID = iptorrents_uid.strip()
         sickbeard.IPTORRENTS_RSSHASH = iptorrents_rsshash.strip()
-        
+
+        sickbeard.DEMONOID_USERNAME = demonoid_username.strip()
+        sickbeard.DEMONOID_PASSWORD = demonoid_password.strip()
+
         sickbeard.BITHDTV_USERNAME = bithdtv_username.strip()
         sickbeard.BITHDTV_PASSWORD = bithdtv_password.strip()
-        
+
         sickbeard.TORRENTSHACK_USERNAME = torrentshack_username.strip()
         sickbeard.TORRENTSHACK_PASSWORD = torrentshack_password.strip()
         sickbeard.TORRENTSHACK_UID = torrentshack_uid.strip()
         sickbeard.TORRENTSHACK_AUTH = torrentshack_auth.strip()
         sickbeard.TORRENTSHACK_PASS_KEY = torrentshack_pass_key.strip()
         sickbeard.TORRENTSHACK_AUTH_KEY = torrentshack_auth_key.strip()
-        
+
         sickbeard.SPEED_USERNAME = speed_username.strip()
         sickbeard.SPEED_PASSWORD = speed_password.strip()
         sickbeard.SPEED_RSSHASH = speed_rsshash.strip()
-        
+
         sickbeard.REVOLUTIONTT_USERNAME = revolutiontt_username.strip()
         sickbeard.REVOLUTIONTT_PASSWORD = revolutiontt_password.strip()
         sickbeard.REVOLUTIONTT_RSSHASH = revolutiontt_rsshash.strip()
-        
+
         if torrentz_verified == "on":
             torrentz_verified = 1
         else:
@@ -1305,7 +1311,7 @@ class ConfigNotifications:
         sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(pushbullet_notify_ondownload)
         sickbeard.PUSHBULLET_APIKEY = pushbullet_apikey
         sickbeard.PUSHBULLET_DEVICE = pushbullet_device
-        
+
         sickbeard.USE_BOXCAR = config.checkbox_to_value(use_boxcar)
         sickbeard.BOXCAR_NOTIFY_ONSNATCH = config.checkbox_to_value(boxcar_notify_onsnatch)
         sickbeard.BOXCAR_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(boxcar_notify_ondownload)
@@ -1982,7 +1988,7 @@ class Home:
     def testTorrent(self, torrent_method=None, host=None, username=None, password=None):
         if not host.endswith("/"):
             host = host + "/"
-        
+
         if torrent_method == 'utorrent':
             connection, accesMsg = utorrent.testAuthentication(host, username, password)
         elif torrent_method == 'transmission':
@@ -1992,8 +1998,8 @@ class Home:
         elif torrent_method == 'deluge':
             connection, accesMsg = deluge.testAuthentication(host, username, password)
 
-        return accesMsg   
-    
+        return accesMsg
+
     @cherrypy.expose
     def testGrowl(self, host=None, password=None):
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
@@ -2044,17 +2050,17 @@ class Home:
     @cherrypy.expose
     def Pushbullet_retriveDevices(self,apiKey=None):
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
-        
+
         result = notifiers.pushbullet_notifier._retriveDevices(apiKey)
         if result:
             return result
         else:
             return None
-    
-    @cherrypy.expose   
+
+    @cherrypy.expose
     def testPushbullet(self,apiKey=None,device=None):
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
-        
+
         result = notifiers.pushbullet_notifier.test_notify(apiKey,device)
         if result:
             return "Pushbullet notification succeeded. Check your Pushbullet clients to make sure it worked"
