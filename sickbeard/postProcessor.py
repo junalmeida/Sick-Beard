@@ -835,14 +835,14 @@ class PostProcessor(object):
         # figure out the base name of the resulting episode file
         if sickbeard.RENAME_EPISODES:
             orig_extension = self.file_name.rpartition('.')[-1]
-            new_base_name = ek.ek(os.path.basename, proper_path)
+            new_base_name = re.sub(r'\[\w+]','',ek.ek(os.path.basename, proper_path))
             new_file_name = new_base_name + '.' + orig_extension
-
+            
         else:
             # if we're not renaming then there's no new base name, we'll just use the existing name
             new_base_name = None
             new_file_name = self.file_name
-
+            
         try:
             # move the episode and associated files to the show dir
             if sickbeard.KEEP_PROCESSED_DIR:

@@ -142,11 +142,16 @@ class KickAssProvider(generic.TorrentProvider):
             if len(sickbeard.KICKASS_ALT_URL):
                 self.url = sickbeard.KICKASS_ALT_URL
             
-            if len(search_params):
-                SearchParameters["q"] = search_params+" category:tv"
+            if sickbeard.KICKASS_VERIFIED:
+                verifiedTorrent = " verified:1"
             else:
-                SearchParameters["q"] = "category:tv"
-                
+                verifiedTorrent = ""
+
+            if len(search_params):
+                SearchParameters["q"] = search_params+" category:tv"+verifiedTorrent
+            else:
+                SearchParameters["q"] = "category:tv"+verifiedTorrent
+            
             SearchParameters["order"] = "desc"
             SearchParameters["page"] = str(page)
             
@@ -158,7 +163,7 @@ class KickAssProvider(generic.TorrentProvider):
             SearchQuery = urllib.urlencode(SearchParameters)
             
             searchData = self.getURL(self.url + "json.php?%s" % SearchQuery )
-              
+            
             if searchData:
                 try:
                     jdata = json.loads(searchData)
