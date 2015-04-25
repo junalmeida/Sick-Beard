@@ -823,6 +823,12 @@ class ConfigSearch:
 
         # Torrent Search
         sickbeard.USE_TORRENTS = config.checkbox_to_value(use_torrents)
+        sickbeard.TORRENT_METHOD = torrent_method
+        sickbeard.TORRENT_HOST = config.clean_url(torrent_host)
+        sickbeard.TORRENT_USERNAME = torrent_username
+        sickbeard.TORRENT_PASSWORD = torrent_password
+        sickbeard.TORRENT_PATH = torrent_path
+
 
         if not config.change_TORRENT_DIR(torrent_dir):
             results += ["Unable to create directory " + os.path.normpath(torrent_dir) + ", directory not changed."]
