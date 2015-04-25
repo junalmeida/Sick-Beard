@@ -779,29 +779,15 @@ class ConfigSearch:
     @cherrypy.expose
     def saveSearch(self, use_nzbs=None, use_torrents=None, nzb_dir=None, sab_username=None, sab_password=None,
                        sab_apikey=None, sab_category=None, sab_host=None, nzbget_username=None, nzbget_password=None, nzbget_category=None, nzbget_host=None,
-                       torrent_dir=None, nzb_method=None, usenet_retention=None, search_frequency=None, download_propers=None, ignore_words=None):
+                       torrent_dir=None, nzb_method=None, usenet_retention=None, search_frequency=None, download_propers=None, prefer_episode_releases=None, ignore_words=None,
+                       torrent_method=None, torrent_host=None, torrent_username=None, torrent_password=None, torrent_path=None, torrent_ratio=None, torrent_paused=None):
 
         results = []
 
-        for key, value in postData.items():
-            value = value.strip()
-            val = 1 if value == "on" else value
-            if hasattr(config, 'change_' + key.upper()):
-                ret, msg = getattr(config, 'change_' + key.upper())(val)
-                if ret == False:
-                    results.append(msg)
-            elif hasattr(sickbeard, key.upper()):
-                setattr(sickbeard, key.upper(), val)
-            elif hasattr(sickbeard, key.lower()):
-                setattr(sickbeard, key.lower(), val)
-            else:
-                logger.log("Unknown search setting: " + key, logger.ERROR)
-
         # handle some special cases
-        sickbeard.TORRENT_PAUSED = config.checkbox_to_value(postData.get("torrent_paused"))
-        sickbeard.PREFER_EPISODE_RELEASES = config.checkbox_to_value(postData.get("prefer_episode_releases"))
-        sickbeard.SAB_APIKEY = postData.get('sab_apikey', '').strip()
-        sickbeard.TORRENT_RATIO = config.to_float(postData.get("torrent_ratio"), default=1.0)
+        sickbeard.TORRENT_PAUSED = config.checkbox_to_value(torrent_paused)
+        sickbeard.PREFER_EPISODE_RELEASES = config.checkbox_to_value(prefer_episode_releases)
+        sickbeard.TORRENT_RATIO = config.to_float(torrent_ratio, default=1.0)
 
         # this regex will match http or https urls or just a domain/address
         regex = re.compile(r'^(http)?(?P<s>s|)?(://)?(?P<addr>[^/]*)/?')
@@ -810,7 +796,7 @@ class ConfigSearch:
 
 
         # Episode Search
-        sickbeard.DOWNLOAD_PROPERS = config.checkbox_to_value(postData.get("download_propers"))
+        sickbeard.DOWNLOAD_PROPERS = config.checkbox_to_value(download_propers)
 
         config.change_SEARCH_FREQUENCY(search_frequency)
         sickbeard.USENET_RETENTION = config.to_int(usenet_retention, default=500)
@@ -818,7 +804,8 @@ class ConfigSearch:
         sickbeard.IGNORE_WORDS = ignore_words
 
         # NZB Search
-        sickbeard.USE_NZBS = config.checkbox_to_value(postData.get("use_nzbs"))
+        sickbeard.USE_NZBS = config.checkbox_to_value(use_nzbs)
+        sickbeard.NZB_METHOD = nzb_method
 
         sickbeard.SAB_HOST = config.clean_url(sab_host)
         sickbeard.SAB_USERNAME = sab_username
@@ -826,8 +813,8 @@ class ConfigSearch:
         sickbeard.SAB_APIKEY = sab_apikey.strip()
         sickbeard.SAB_CATEGORY = sab_category
 
-        if not config.change_NZB_DIR(postData.get("nzb_dir")):
-            results += ["Unable to create directory " + os.path.normpath(postData.get("nzb_dir")) + ", directory not changed."]
+        if not config.change_NZB_DIR(nzb_dir):
+            results += ["Unable to create directory " + os.path.normpath(nzb_dir) + ", directory not changed."]
 
         sickbeard.NZBGET_HOST = config.clean_url(nzbget_host)
         sickbeard.NZBGET_USERNAME = nzbget_username
@@ -835,10 +822,10 @@ class ConfigSearch:
         sickbeard.NZBGET_CATEGORY = nzbget_category
 
         # Torrent Search
-        sickbeard.USE_TORRENTS = config.checkbox_to_value(postData.get("use_torrents"))
+        sickbeard.USE_TORRENTS = config.checkbox_to_value(use_torrents)
 
-        if not config.change_TORRENT_DIR(postData.get("torrent_dir")):
-            results += ["Unable to create directory " + os.path.normpath(postData.get("torrent_dir")) + ", directory not changed."]
+        if not config.change_TORRENT_DIR(torrent_dir):
+            results += ["Unable to create directory " + os.path.normpath(torrent_dir) + ", directory not changed."]
 
         sickbeard.save_config()
 
