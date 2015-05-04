@@ -38,7 +38,7 @@ from providers import ezrss, tvtorrents, torrentleech, btn, newznab, womble, omg
 
 from providers import kickass, torrentz, thepiratebay, torrentday
 from providers import sceneaccess, iptorrents, bithdtv, btdigg, torrentshack
-from providers import speed, revolutiontt
+from providers import speed, revolutiontt, linkomanija
 
 from sickbeard.config import CheckSection, check_setting_int, check_setting_str, ConfigMigrator
 
@@ -234,6 +234,11 @@ REVOLUTIONTT_USERNAME = None
 REVOLUTIONTT_PASSWORD = None
 REVOLUTIONTT_RSSHASH = None
 
+LINKOMANIJA = False
+LINKOMANIJA_USERNAME = None
+LINKOMANIJA_PASSWORD = None
+LINKOMANIJA_RSSHASH = None
+
 BTN = False
 BTN_API_KEY = None
 
@@ -411,6 +416,7 @@ def initialize(consoleLogging=True):
                 TORRENTSHACK, TORRENTSHACK_USERNAME, TORRENTSHACK_PASSWORD, TORRENTSHACK_UID, TORRENTSHACK_AUTH, TORRENTSHACK_PASS_KEY ,TORRENTSHACK_AUTH_KEY, \
                 SPEED, SPEED_USERNAME, SPEED_PASSWORD, SPEED_RSSHASH, \
                 REVOLUTIONTT, REVOLUTIONTT_USERNAME, REVOLUTIONTT_PASSWORD, REVOLUTIONTT_RSSHASH, \
+                LINKOMANIJA, LINKOMANIJA_USERNAME, LINKOMANIJA_PASSWORD, LINKOMANIJA_RSSHASH, \
                 BTDIGG, \
                 NZBS, NZBS_UID, NZBS_HASH, EZRSS, \
                 THEPIRATEBAY, THEPIRATEBAY_TRUSTED, THEPIRATEBAY_PROXY, THEPIRATEBAY_PROXY_URL, THEPIRATEBAY_URL_OVERRIDE, \
@@ -623,6 +629,11 @@ def initialize(consoleLogging=True):
         REVOLUTIONTT_USERNAME = check_setting_str(CFG, 'REVOLUTIONTT', 'revolutiontt_username', '')
         REVOLUTIONTT_PASSWORD = check_setting_str(CFG, 'REVOLUTIONTT', 'revolutiontt_password', '')
         REVOLUTIONTT_RSSHASH = check_setting_str(CFG, 'REVOLUTIONTT', 'revolutiontt_rsshash', '')
+        
+	LINKOMANIJA = bool(check_setting_int(CFG, 'LINKOMANIJA', 'linkomanija', 0))
+        LINKOMANIJA_USERNAME = check_setting_str(CFG, 'LINKOMANIJA', 'linkomanija_username', '')
+        LINKOMANIJA_PASSWORD = check_setting_str(CFG, 'LINKOMANIJA', 'linkomanija_password', '')
+        LINKOMANIJA_RSSHASH = check_setting_str(CFG, 'LINKOMANIJA', 'linkomanija_rsshash', '')
         
         BTDIGG = bool(check_setting_int(CFG, 'BTDIGG', 'btdigg', 0))
         
@@ -1261,6 +1272,12 @@ def save_config():
     new_config['REVOLUTIONTT']['revolutiontt_username'] = REVOLUTIONTT_USERNAME
     new_config['REVOLUTIONTT']['revolutiontt_password'] = REVOLUTIONTT_PASSWORD
     new_config['REVOLUTIONTT']['revolutiontt_rsshash'] = REVOLUTIONTT_RSSHASH
+    
+    new_config['LINKOMANIJA'] = {}
+    new_config['LINKOMANIJA']['linkomanija'] = int(LINKOMANIJA)
+    new_config['LINKOMANIJA']['linkomanija_username'] = LINKOMANIJA_USERNAME
+    new_config['LINKOMANIJA']['linkomanija_password'] = LINKOMANIJA_PASSWORD
+    new_config['LINKOMANIJA']['linkomanija_rsshash'] = LINKOMANIJA_RSSHASH    
     
     new_config['BTDIGG'] = {}
     new_config['BTDIGG']['btdigg'] = int(BTDIGG)

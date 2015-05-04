@@ -1008,6 +1008,7 @@ class ConfigProviders:
                       torrentz_verified = None,
                       speed_username = None, speed_password = None, speed_rsshash = None,
                       revolutiontt_username = None, revolutiontt_password = None, revolutiontt_rsshash = None,
+                      linkomanija_username = None, linkomanija_password = None, linkomanija_rsshash = None,                      
                       kickass_alt_url = None,
                       provider_order=None):
 
@@ -1096,6 +1097,8 @@ class ConfigProviders:
                 sickbeard.SPEED = curEnabled
             elif curProvider == 'revolutiontt':
                 sickbeard.REVOLUTIONTT = curEnabled
+            elif curProvider == 'linkomanija':
+                sickbeard.LINKOMANIJA = curEnabled                
             elif curProvider == 'btn':
                 sickbeard.BTN = curEnabled
             elif curProvider in newznabProviderDict:
@@ -1173,7 +1176,12 @@ class ConfigProviders:
         sickbeard.REVOLUTIONTT_USERNAME = revolutiontt_username.strip()
         sickbeard.REVOLUTIONTT_PASSWORD = revolutiontt_password.strip()
         sickbeard.REVOLUTIONTT_RSSHASH = revolutiontt_rsshash.strip()
+
+        sickbeard.LINKOMANIJA_USERNAME = linkomanija_username.strip()
+        sickbeard.LINKOMANIJA_PASSWORD = linkomanija_password.strip()
+        sickbeard.LINKOMANIJA_RSSHASH = linkomanija_rsshash.strip()
         
+       
         if torrentz_verified == "on":
             torrentz_verified = 1
         else:
