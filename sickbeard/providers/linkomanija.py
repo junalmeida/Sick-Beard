@@ -1,6 +1,5 @@
 ###################################################################################################
-# Author: Jodi Jones <venom@gen-x.co.nz>
-# URL: http://code.google.com/p/sickbeard/
+# Author: Roman Kolesnev <roman.kolesnev@gmail.com>
 #
 # This file is part of Sick Beard.
 #
