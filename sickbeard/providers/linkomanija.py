@@ -1,5 +1,6 @@
 ###################################################################################################
 # Author: Roman Kolesnev <roman.kolesnev@gmail.com>
+# URL: https://github.com/skl83/Sick-Beard
 #
 # This file is part of Sick Beard.
 #
