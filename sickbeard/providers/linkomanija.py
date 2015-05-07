@@ -1,6 +1,6 @@
 ###################################################################################################
-# Author: Roman Kolesnev <roman.kolesnev@gmail.com>
-# URL: https://github.com/skl83/Sick-Beard
+# Author: Jodi Jones <venom@gen-x.co.nz>
+# URL: http://code.google.com/p/sickbeard/
 #
 # This file is part of Sick Beard.
 #
@@ -141,10 +141,6 @@ class LinkomanijaProvider(generic.TorrentProvider):
     ###################################################################################################
     
     def parseResults(self, searchUrl):
-    	##data='<a href="details?123123.Big.Bang.S08E15"><b>The Big Bang Theory - 8x15 - The Comic Book Store Regeneration</b></a>Some Stuff asdf <a class="index" href="download\.php/(?P<url>.*?)">'
-    	
-    	##data='<td class="center" style="padding: 0px"><a href="browse.php?cat=60"><img border="0" src="static.linkomanija.net/categories/3/tvhd.gif"   alt="TV HD" title="TV HD"/></a></td><td align="left"><a href="details?428771.The_Big_Bang_Theory_S08E22_1080p_HDTV_X264-DIMENSION"><b>The Big Bang Theory S08E22 1080p HDTV X264-DIMENSION</b></a><a class="index" href="download.php?id=428771&name=The.Big.Bang.Theory.S08E22.1080p.HDTV.X264-DIMENSION_.torrent"><img style="border:none; float:right;" alt="download" title="Parsisiusti" src="static.linkomanija.net/pic/download.gif"/></a>	<a  href="javascript:void(0);" onclick="addBookmarkL(428771);" id="ba_428771">		<img style="border:none; float:right; padding-right:3px;" alt="Prideti yma" title="Prideti yma" src="static.linkomanija.net/images/bookmarksinactivesmall.png"/>	</a>	<a style="display:none;" href="javascript:void(0);" onclick="removeBookmarkL(428771);" id="br_428771">		<img style="border:none; float:right; padding-right:3px;" alt="Pasalinti zyma" title="Prideti zyma" src="static.linkomanija.net/images/bookmarkssmall.png"/>	</a>		<img style="border:none; float:right; padding-right:3px; display:none;" alt="loading" src="static.linkomanija.net/images/loadingsmall.gif" id="bl_428771"/>	<br /><span style="font-size:10px;"></span></td><td class="center"><b><a href="details?428771:The_Big_Bang_Theory_S08E22_1080p_HDTV_X264-DIMENSION#filelist">2</a></b></td><td class="center">0</td><td class=center><nobr>2015-04-24<br />04:18:36</nobr></td><td class=center>1.15<br>GB</td><td class=center>302</td><td class=center><b><a href=details?428771:The_Big_Bang_Theory_S08E22_1080p_HDTV_X264-DIMENSION#peerslist><span class="slr0">52</span></a></b></td><td class="center">0</td></tr><tr class="torrenttable"><td class="center" style="padding: 0px"><a href="browse.php?cat=30"><img border="0" src="static.linkomanija.net/categories/3/tvsd.gif"   alt="TV" title="TV"/></a></td><td align="left"><a href="details?428758.The_Big_Bang_Theory_S08E22_HDTV_x264-LOL"><b>The Big Bang Theory S08E22 HDTV x264-LOL</b></a><a class="index" href="download.php?id=428758&name=The.Big.Bang.Theory.S08E22.HDTV.x264-LOL_.torrent"><img style="border:none; float:right;" alt="download" title="Parsisiusti" src="static.linkomanija.net/pic/download.gif"/></a>	<a  href="javascript:void(0);" onclick="addBookmarkL(428758);" id="ba_428758">		<img style="border:none; float:right; padding-right:3px;" alt="Prideti zyma" title="Prideti zyma" src="static.linkomanija.net/images/bookmarksinactivesmall.png"/>	</a>	<a style="display:none;" href="javascript:void(0);" onclick="removeBookmarkL(428758);" id="br_428758">		<img style="border:none; float:right; padding-right:3px;" alt="Pasalinti zyma" title="Prideti zyma" src="static.linkomanija.net/images/bookmarkssmall.png"/>'
-
         data = self.getURL(searchUrl)
         results = []
         if data:
