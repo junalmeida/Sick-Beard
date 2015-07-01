@@ -123,6 +123,7 @@ def processDir (dirName, nzbName=None, recurse=False):
                 returnStr += logHelper(u"Deleting folder " + dirName, logger.DEBUG)
 
                 try:
+                    os.chmod(dirName, stat.S_IWRITE) # make sure folder is not read-only to allow for delete on Windows
                     shutil.rmtree(dirName)
                 except (OSError, IOError), e:
                     returnStr += logHelper(u"Warning: unable to remove the folder " + dirName + ": " + ex(e), logger.WARNING)
