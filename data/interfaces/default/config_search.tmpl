@@ -39,6 +39,14 @@
                         </div>
                             
                         <div class="field-pair">
+                            <input type="checkbox" name="download_avoid_junk" id="download_avoid_junk" #if $sickbeard.DOWNLOAD_AVOID_JUNK == True then "checked=\"checked\"" else ""# />
+                            <label class="clearfix" for="download_avoid_junk">
+                                <span class="component-title">Avoid Junk Downloads</span>
+                                <span class="component-desc">Wait until the day after an episode airs to download it in an attempt to avoid junk downloads?</span>
+                            </label>
+                        </div>
+                            
+                        <div class="field-pair">
                             <input type="checkbox" name="download_propers" id="download_propers" #if $sickbeard.DOWNLOAD_PROPERS == True then "checked=\"checked\"" else ""# />
                             <label class="clearfix" for="download_propers">
                                 <span class="component-title">Download Propers</span>
