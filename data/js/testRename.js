@@ -12,6 +12,16 @@ $(document).ready(function() {
         });
     });
 
+	$('.allCheck').click(function() {
+		var selectAll = this;
+		$('.seasonCheck').each(function() {
+			this.checked = selectAll.checked;
+			});
+		$('.epCheck').each(function() {
+			this.checked = selectAll.checked;
+		});	
+	});
+
     $('input[type=submit]').click(function() {
         var epArr = new Array();
 

@@ -24,8 +24,10 @@
 
 #set $curSeason = -1
 #set $odd = False
-<table id="testRenameTable" class="sickbeardTable" cellspacing="1" border="0" cellpadding="0">
 
+<br />
+<table id="testRenameTable" class="sickbeardTable" cellspacing="1" border="0" cellpadding="0">
+<tr><input type="checkbox" class="allCheck" id="allCheck" /> Select All</tr>
 #for $cur_ep_obj in $ep_obj_list:
 #set $curLoc = $cur_ep_obj.location[len($cur_ep_obj.show.location)+1:]
 #set $curExt = $curLoc.split('.')[-1]
