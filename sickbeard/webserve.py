@@ -758,6 +758,7 @@ class ConfigSearch:
         # handle some special cases
         sickbeard.TORRENT_PAUSED = config.checkbox_to_value(postData.get("torrent_paused"))
         sickbeard.PREFER_EPISODE_RELEASES = config.checkbox_to_value(postData.get("prefer_episode_releases"))
+        sickbeard.MIN_SEEDERS = config.to_int(postData.get("minimum_seeders"), default=1)
         sickbeard.SAB_APIKEY = postData.get('sab_apikey', '').strip()
         sickbeard.TORRENT_RATIO = config.to_float(postData.get("torrent_ratio"), default=1.0)
 

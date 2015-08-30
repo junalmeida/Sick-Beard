@@ -58,7 +58,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
         self.proxy = ThePirateBayWebproxy() 
         self.url = 'http://thepiratebay.se/'
         self.searchurl =  self.url + 'search/%s/0/7/200'  # order by seed       
-        self.re_title_url = '<td>.*?".*?/torrent/\d+/(?P<title>.*?)%s".*?<a href=".*?(?P<url>magnet.*?)%s".*?</td>'
+        self.re_title_url = '<td>.*?".*?/torrent/\d+/(?P<title>.*?)%s".*?<a href=".*?(?P<url>magnet.*?)%s".*?</td>\s*<td align="right">(?P<seeders>\d+)</td>'
  
     ###################################################################################################
     def isEnabled(self):
@@ -150,7 +150,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
     ###################################################################################################
     def _doSearch(self, search_params, show=None):
         results = []
-        searchURL = self.proxy._buildURL(self.searchurl %(urllib.quote(search_params)))    
+        searchURL = self.proxy._buildURL(self.searchurl % (urllib.quote(search_params)))
         logger.log(u"Search string: " + searchURL, logger.DEBUG)
                     
         data = self.getURL(searchURL)
@@ -160,7 +160,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
         re_title_url = self.proxy._buildRE(self.re_title_url)
         
         #Extracting torrent information from searchURL                   
-        match = re.compile(re_title_url, re.DOTALL ).finditer(urllib.unquote(data))
+        match = re.compile(re_title_url, re.DOTALL).finditer(urllib.unquote(data))
         for torrent in match:
             #Accept Torrent only from Good People
             if sickbeard.THEPIRATEBAY_TRUSTED and re.search('(VIP|Trusted|Helpers)',torrent.group(0))== None:
@@ -168,16 +168,16 @@ class ThePirateBayProvider(generic.TorrentProvider):
                 continue
             
             #Do not know why but Sick Beard skip release with a '_' in name
-            item = (torrent.group('title').replace('_','.'),torrent.group('url'))
+            item = (torrent.group('title').replace('_', '.'), torrent.group('url'), int(torrent.group('seeders')))
             results.append(item)
         return results
 
     ###################################################################################################
     def _get_title_and_url(self, item):
-        (title, url) = item
+        (title, url, seeders) = item
         if url:
             url = url.replace('&amp;','&')
-        return (title, url)
+        return (title, url, seeders)
 
     ###################################################################################################
     def getURL(self, url, headers=None):
@@ -249,11 +249,11 @@ class ThePirateBayCache(tvcache.TVCache):
                 
         for torrent in match:
             #accept torrent only from Trusted people
-            if sickbeard.THEPIRATEBAY_TRUSTED and re.search('(VIP|Trusted|Helpers)',torrent.group(0))== None:
+            if sickbeard.THEPIRATEBAY_TRUSTED and re.search('(VIP|Trusted|Helpers)', torrent.group(0))== None:
                 logger.log(u"ThePirateBay Provider found result "+torrent.group('title')+" but that doesn't seem like a trusted result so I'm ignoring it",logger.DEBUG)
                 continue
             
-            item = (torrent.group('title').replace('_','.'),torrent.group('url'))
+            item = (torrent.group('title').replace('_','.'), torrent.group('url'), torrent.group('seeders'))
             self._parseItem(item)
 
     ###################################################################################################
@@ -265,7 +265,7 @@ class ThePirateBayCache(tvcache.TVCache):
 
     ###################################################################################################
     def _parseItem(self, item):
-        (title, url) = item
+        (title, url, seeders) = item
         if not title or not url:
             return
         logger.log(u"Adding item to cache: "+title, logger.DEBUG)

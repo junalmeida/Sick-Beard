@@ -127,7 +127,7 @@ class TORRENTZProvider(generic.TorrentProvider):
             results = []
             for curItem in items:
                 try:
-                    (title, url) = self._get_title_and_url(curItem)
+                    (title, url, seeders) = self._get_title_and_url(curItem)
                     if not title or not url:
                         #logger.log(u"The XML returned from the " + self.name + " RSS feed is incomplete: %(title)s %(url)s" % {'title': title, 'url': url}, logger.ERROR)
                         continue
@@ -155,10 +155,17 @@ class TORRENTZProvider(generic.TorrentProvider):
     def _get_title_and_url(self, item):
         title = item.findtext('title')
         torrentz_url = item.findtext('guid')
-        url = self._getTorrentzCache(torrentz_url)
+        description = item.findtext('description')
 
+        seeders = 0
+
+        match = re.match('Size: (?P<size>.*?) Seeds: (?P<seeds>.*?) Peers: (?P<peers>\d+)', description, re.I)
+        if match:
+            seeders = int(match.groupdict()['seeds'].replace(',', ''))
+
+        url = self._getTorrentzCache(torrentz_url)
         
-        return (title, url)
+        return (title, url, seeders)
 
     def _extract_name_from_filename(self, filename):
         name_regex = '(.*?)\.?(\[.*]|\d+\.TPB)\.torrent$'

@@ -17,6 +17,7 @@
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import with_statement
+from _ssl import SSLError
 
 import gzip
 import os
@@ -151,7 +152,7 @@ def getURL(url, post_data=None, headers=[]):
         opener.addheaders.append(cur_header)
 
     try:
-        usock = opener.open(url, post_data)
+        usock = opener.open(url, post_data, timeout=15)
         url = usock.geturl()
         encoding = usock.info().get("Content-Encoding")
 
@@ -186,6 +187,10 @@ def getURL(url, post_data=None, headers=[]):
 
     except ValueError:
         logger.log(u"Unknown error while loading URL " + url, logger.WARNING)
+        return None
+
+    except SSLError, e:
+        logger.log(u"SSL error while loading URL " + e.message, logger.WARNING)
         return None
 
     except Exception:
