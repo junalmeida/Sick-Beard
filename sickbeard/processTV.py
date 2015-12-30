@@ -67,7 +67,7 @@ def logHelper(logMessage, logLevel=logger.MESSAGE):
     return logMessage + u"\n"
 
 
-def processDir(dirName, nzbName=None, method=None, recurse=False, pp_options={}):
+def processDir(dirName, nzbName=None, process_method=None, method=None, recurse=False, pp_options={}):
     """
     Scans through the files in dirName and processes whatever media files it finds
 
@@ -95,6 +95,9 @@ def processDir(dirName, nzbName=None, method=None, recurse=False, pp_options={})
     if not ek.ek(os.path.isdir, dirName):
         returnStr += logHelper(u"Unable to figure out what folder to process. If your downloader and Sick Beard aren't on the same PC make sure you fill out your TV download dir in the config.", logger.DEBUG)
         return returnStr
+
+    if not process_method:
+        process_method = sickbeard.PROCESS_METHOD
 
     # TODO: check if it's failed and deal with it if it is
     if ek.ek(os.path.basename, dirName).startswith('_FAILED_'):
@@ -183,7 +186,7 @@ def processDir(dirName, nzbName=None, method=None, recurse=False, pp_options={})
 
         try:
             returnStr += u"\n"
-            processor = postProcessor.PostProcessor(cur_video_file_path, nzb_name=nzbName, pp_options=pp_options)
+            processor = postProcessor.PostProcessor(cur_video_file_path, process_method, nzb_name=nzbName, pp_options=pp_options)
             process_result = processor.process()
             process_fail_message = ""
 

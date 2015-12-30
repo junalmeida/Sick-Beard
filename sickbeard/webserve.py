@@ -870,7 +870,7 @@ class ConfigPostProcessing:
     @cherrypy.expose
     def savePostProcessing(self, naming_pattern=None, naming_multi_ep=None,
                     xbmc_data=None, xbmc_12plus_data=None, mediabrowser_data=None, sony_ps3_data=None, wdtv_data=None, tivo_data=None, mede8er_data=None,
-                    keep_processed_dir=None, process_automatically=None, rename_episodes=None,
+                    keep_processed_dir=None, process_method=None, process_automatically=None, rename_episodes=None,
                     move_associated_files=None, filter_associated_files=None, tv_download_dir=None, naming_custom_abd=None, naming_abd_pattern=None):
 
         results = []
@@ -880,6 +880,7 @@ class ConfigPostProcessing:
             results += ["Unable to create directory " + os.path.normpath(tv_download_dir) + ", dir not changed."]
 
         sickbeard.KEEP_PROCESSED_DIR = config.checkbox_to_value(keep_processed_dir)
+        sickbeard.PROCESS_METHOD = process_method
         sickbeard.MOVE_ASSOCIATED_FILES = config.checkbox_to_value(move_associated_files)
         sickbeard.FILTER_ASSOCIATED_FILES = filter_associated_files
         sickbeard.RENAME_EPISODES = config.checkbox_to_value(rename_episodes)
@@ -1549,7 +1550,7 @@ class HomePostProcess:
         return _munge(t)
 
     @cherrypy.expose
-    def processEpisode(self, dir=None, nzbName=None, method=None, jobName=None, quiet=None, *args, **kwargs):
+    def processEpisode(self, dir=None, nzbName=None, method=None, jobName=None, quiet=None, process_method=None, *args, **kwargs):
 
         if not dir:
             redirect("/home/postprocess/")
@@ -1560,7 +1561,7 @@ class HomePostProcess:
                     value = True
                 pp_options[key] = value
 
-            result = processTV.processDir(dir, nzbName, method=method, pp_options=pp_options)
+            result = processTV.processDir(dir, nzbName, process_method=process_method, method=method, pp_options=pp_options)
             if quiet is not None and int(quiet) == 1:
                 return result
 

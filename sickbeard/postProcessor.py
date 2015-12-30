@@ -57,7 +57,7 @@ class PostProcessor(object):
     FOLDER_NAME = 2
     FILE_NAME = 3
 
-    def __init__(self, file_path, nzb_name=None, pp_options={}):
+    def __init__(self, file_path, process_method=None, nzb_name=None, pp_options={}):
         """
         Creates a new post processor with the given file path and optionally an NZB name.
 
@@ -78,6 +78,8 @@ class PostProcessor(object):
 
         # name of the NZB that resulted in this folder
         self.nzb_name = nzb_name
+
+        self.process_method = process_method if process_method else sickbeard.PROCESS_METHOD
 
         self.force_replace = pp_options.get('force_replace', False)
 
@@ -260,6 +262,44 @@ class PostProcessor(object):
                 raise e
 
         self._combined_file_operation(file_path, new_path, new_base_name, associated_files, action=_int_copy)
+
+    def _hardlink(self, file_path, new_path, new_base_name, associated_files=False):
+        """
+        file_path: The full path of the media file to move
+        new_path: Destination path where we want to create a hard linked file
+        new_base_name: The base filename (no extension) to use during the link. Use None to keep the same name.
+        associated_files: Boolean, whether we should move similarly-named files too
+        """
+
+        def _int_hard_link(cur_file_path, new_file_path):
+
+            self._log(u"Hard linking file from " + cur_file_path + " to " + new_file_path, logger.DEBUG)
+            try:
+                helpers.hardlinkFile(cur_file_path, new_file_path)
+                helpers.chmodAsParent(new_file_path)
+            except (IOError, OSError), e:
+                self._log(u"Unable to link file " + cur_file_path + " to " + new_file_path + ": " + ex(e), logger.ERROR)
+                raise e
+        self._combined_file_operation(file_path, new_path, new_base_name, associated_files, action=_int_hard_link)
+
+    def _moveAndSymlink(self, file_path, new_path, new_base_name, associated_files=False):
+        """
+        file_path: The full path of the media file to move
+        new_path: Destination path where we want to move the file to create a symbolic link to
+        new_base_name: The base filename (no extension) to use during the link. Use None to keep the same name.
+        associated_files: Boolean, whether we should move similarly-named files too
+        """
+
+        def _int_move_and_sym_link(cur_file_path, new_file_path):
+
+            self._log(u"Moving then symbolic linking file from " + cur_file_path + " to " + new_file_path, logger.DEBUG)
+            try:
+                helpers.moveAndSymlinkFile(cur_file_path, new_file_path)
+                helpers.chmodAsParent(new_file_path)
+            except (IOError, OSError), e:
+                self._log(u"Unable to link file " + cur_file_path + " to " + new_file_path + ": " + ex(e), logger.ERROR)
+                raise e
+        self._combined_file_operation(file_path, new_path, new_base_name, associated_files, action=_int_move_and_sym_link)
 
     def _history_lookup(self):
         """
@@ -823,10 +863,17 @@ class PostProcessor(object):
 
         try:
             # move the episode and associated files to the show dir
-            if sickbeard.KEEP_PROCESSED_DIR:
+            if self.process_method == "copy":
                 self._copy(self.file_path, dest_path, new_base_name, sickbeard.MOVE_ASSOCIATED_FILES)
-            else:
+            elif self.process_method == "move":
                 self._move(self.file_path, dest_path, new_base_name, sickbeard.MOVE_ASSOCIATED_FILES)
+            elif self.process_method == "hardlink":
+              self._hardlink(self.file_path, dest_path, new_base_name, sickbeard.MOVE_ASSOCIATED_FILES)
+            elif self.process_method == "symlink":
+              self._moveAndSymlink(self.file_path, dest_path, new_base_name, sickbeard.MOVE_ASSOCIATED_FILES)
+            else:
+              logger.log(u"Unknown process method: " + str(self.process_method), logger.ERROR)
+              raise exceptions.PostProcessingFailed(u"Unable to move the files to their new home")
         except (OSError, IOError):
             raise exceptions.PostProcessingFailed(u"Unable to move the files to destination folder: " + dest_path)
 
