@@ -1187,6 +1187,20 @@
                                 <span class="component-desc">Should Sick Beard send Slack notifications?</span>
                             </label>
                         </div>
+                        <div class="field-pair">
+                            <input type="checkbox" name="slack_notify_onsnatch" id="slack_notify_onsnatch" #if $sickbeard.SLACK_NOTIFY_ONSNATCH then "checked=\"checked\"" else ""# />
+                            <label class="clearfix" for="slack_notify_onsnatch">
+                                <span class="component-title">Notify on Snatch</span>
+                                <span class="component-desc">Send notification when we start a download?</span>
+                            </label>
+                        </div>
+                        <div class="field-pair">
+                            <input type="checkbox" name="slack_notify_ondownload" id="slack_notify_ondownload" #if $sickbeard.SLACK_NOTIFY_ONDOWNLOAD then "checked=\"checked\"" else ""# />
+                            <label class="clearfix" for="slack_notify_ondownload">
+                                <span class="component-title">Notify on Download</span>
+                                <span class="component-desc">Send notification when we finish a download?</span>
+                            </label>
+                        </div>
 
                         <div id="content_use_slack">
                             <div class="field-pair">
