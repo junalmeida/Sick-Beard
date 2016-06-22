@@ -1052,7 +1052,7 @@ class ConfigProviders:
                       torrentleech_username = None, torrentleech_password = None,
                       torrentday_phpsessid = None, torrentday_uid = None, torrentday_pass = None,
                       sceneaccess_username = None, sceneaccess_password = None, sceneaccess_rsshash = None,
-                      iptorrents_username = None, iptorrents_password = None, iptorrents_uid = None, iptorrents_rsshash = None, iptorrents_eu = None, 
+                      iptorrents_username = None, iptorrents_password = None, iptorrents_uid = None, iptorrents_rsshash = None, iptorrents_eu = None,
                       bithdtv_username = None, bithdtv_password = None,
                       torrentshack_username = None, torrentshack_password = None, torrentshack_uid = None, torrentshack_auth = None, torrentshack_pass_key = None, torrentshack_auth_key = None,
                       torrentz_verified = None,
@@ -1127,7 +1127,7 @@ class ConfigProviders:
             elif curProvider == 'torrentz':
                 sickbeard.TORRENTZ = curEnabled
             elif curProvider == 'thepiratebay':
-                sickbeard.THEPIRATEBAY = curEnabled 
+                sickbeard.THEPIRATEBAY = curEnabled
             elif curProvider == 'tvtorrents':
                 sickbeard.TVTORRENTS = curEnabled
             elif curProvider == 'torrentleech':
@@ -1167,16 +1167,16 @@ class ConfigProviders:
             thepiratebay_trusted = 0
 
         sickbeard.THEPIRATEBAY_TRUSTED = thepiratebay_trusted
-        
-        if thepiratebay_proxy == "on": 
+
+        if thepiratebay_proxy == "on":
             thepiratebay_proxy = 1
             sickbeard.THEPIRATEBAY_PROXY_URL = thepiratebay_proxy_url.strip()
         else:
             thepiratebay_proxy = 0
             sickbeard.THEPIRATEBAY_PROXY_URL = ""
-            
+
         sickbeard.THEPIRATEBAY_PROXY = thepiratebay_proxy
-        
+
         if thepiratebay_url_override_enable == "on":
             thepiratebay_url_override_enable = 1
             thepiratebay_url_override = thepiratebay_url_override.strip()
@@ -1186,44 +1186,44 @@ class ConfigProviders:
         else:
             thepiratebay_url_override_enable = 0
             sickbeard.THEPIRATEBAY_URL_OVERRIDE = ""
-            
+
         sickbeard.KICKASS_ALT_URL = kickass_alt_url.strip()
- 
+
         sickbeard.TORRENTLEECH_USERNAME = torrentleech_username
         sickbeard.TORRENTLEECH_PASSWORD = torrentleech_password
-        
+
         sickbeard.TORRENTDAY_PHPSESSID = torrentday_phpsessid.strip()
         sickbeard.TORRENTDAY_UID = torrentday_uid.strip()
         sickbeard.TORRENTDAY_PASS = torrentday_pass.strip()
-        
+
         sickbeard.SCENEACCESS_USERNAME = sceneaccess_username.strip()
         sickbeard.SCENEACCESS_PASSWORD = sceneaccess_password.strip()
         sickbeard.SCENEACCESS_RSSHASH = sceneaccess_rsshash.strip()
-        
+
         sickbeard.IPTORRENTS_USERNAME = iptorrents_username.strip()
         sickbeard.IPTORRENTS_PASSWORD = iptorrents_password.strip()
         sickbeard.IPTORRENTS_UID = iptorrents_uid.strip()
         sickbeard.IPTORRENTS_RSSHASH = iptorrents_rsshash.strip()
         sickbeard.IPTORRENTS_EU = 1 if iptorrents_eu == 'on' else 0
-        
+
         sickbeard.BITHDTV_USERNAME = bithdtv_username.strip()
         sickbeard.BITHDTV_PASSWORD = bithdtv_password.strip()
-        
+
         sickbeard.TORRENTSHACK_USERNAME = torrentshack_username.strip()
         sickbeard.TORRENTSHACK_PASSWORD = torrentshack_password.strip()
         sickbeard.TORRENTSHACK_UID = torrentshack_uid.strip()
         sickbeard.TORRENTSHACK_AUTH = torrentshack_auth.strip()
         sickbeard.TORRENTSHACK_PASS_KEY = torrentshack_pass_key.strip()
         sickbeard.TORRENTSHACK_AUTH_KEY = torrentshack_auth_key.strip()
-        
+
         sickbeard.SPEED_USERNAME = speed_username.strip()
         sickbeard.SPEED_PASSWORD = speed_password.strip()
         sickbeard.SPEED_RSSHASH = speed_rsshash.strip()
-        
+
         sickbeard.REVOLUTIONTT_USERNAME = revolutiontt_username.strip()
         sickbeard.REVOLUTIONTT_PASSWORD = revolutiontt_password.strip()
         sickbeard.REVOLUTIONTT_RSSHASH = revolutiontt_rsshash.strip()
-        
+
         if torrentz_verified == "on":
             torrentz_verified = 1
         else:
@@ -1272,6 +1272,7 @@ class ConfigNotifications:
                           use_boxcar2=None, boxcar2_notify_onsnatch=None, boxcar2_notify_ondownload=None, boxcar2_access_token=None, boxcar2_sound=None,
                           use_pushover=None, pushover_notify_onsnatch=None, pushover_notify_ondownload=None, pushover_userkey=None, pushover_priority=None,
                               pushover_device=None, pushover_sound=None, pushover_device_list=None,
+                          use_slack=None, slack_notify_onsnatch=None, slack_notify_ondownload=None, slack_webhook_url=None, slack_channel=None, slack_bot_name=None, slack_icon_url=None,
                           use_libnotify=None, libnotify_notify_onsnatch=None, libnotify_notify_ondownload=None,
                           use_nmj=None, nmj_host=None, nmj_database=None, nmj_mount=None,
                           use_synoindex=None, synoindex_notify_onsnatch=None, synoindex_notify_ondownload=None, synoindex_update_library=None,
@@ -1389,6 +1390,14 @@ class ConfigNotifications:
         sickbeard.TRAKT_USERNAME = trakt_username
         sickbeard.TRAKT_PASSWORD = trakt_password
         sickbeard.TRAKT_API = trakt_api
+
+        sickbeard.USE_SLACK = config.checkbox_to_value(use_slack)
+        sickbeard.SLACK_NOTIFY_ONSNATCH = config.checkbox_to_value(slack_notify_onsnatch)
+        sickbeard.SLACK_NOTIFY_ONDOWNLOAD = config.checkbox_to_value(slack_notify_ondownload)
+        sickbeard.SLACK_WEBHOOK_URL = slack_webhook_url
+        sickbeard.SLACK_CHANNEL = slack_channel
+        sickbeard.SLACK_BOT_NAME = slack_bot_name
+        sickbeard.SLACK_ICON_URL = slack_icon_url
 
         sickbeard.save_config()
 
@@ -2005,7 +2014,7 @@ class ErrorLogs:
 
 
 class Home:
-    
+
     @cherrypy.expose
     def is_alive(self, *args, **kwargs):
         if 'callback' in kwargs and '_' in kwargs:
@@ -2052,7 +2061,7 @@ class Home:
     def testTorrent(self, torrent_method=None, host=None, username=None, password=None):
         if not host.endswith("/"):
             host = host + "/"
-        
+
         if torrent_method == 'utorrent':
             connection, accesMsg = utorrent.testAuthentication(host, username, password)
         elif torrent_method == 'transmission':
@@ -2062,8 +2071,8 @@ class Home:
         elif torrent_method == 'deluge':
             connection, accesMsg = deluge.testAuthentication(host, username, password)
 
-        return accesMsg   
-    
+        return accesMsg
+
     @cherrypy.expose
     def testGrowl(self, host=None, password=None):
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
@@ -2296,6 +2305,16 @@ class Home:
             return "{}"
 
     @cherrypy.expose
+    def testSlack(self, webhookUrl=None, channel=None, bot_name=None, icon_url=None):
+        cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
+
+        result = notifiers.slack_notifier.test_notify(webhookUrl, channel, bot_name, icon_url)
+        if result:
+            return "Slack notification succeeded. Check your Slack clients to make sure it worked"
+        else:
+            return "Error sending Slack notification"
+
+    @cherrypy.expose
     def shutdown(self, pid=None):
 
         if str(pid) != str(sickbeard.PID):
@@ -2337,22 +2356,22 @@ class Home:
             return _munge(t)
         else:
             return _genericMessage("Update Failed", "Update wasn't successful, not restarting. Check your log for more information.")
-    
+
     @cherrypy.expose
     def MITM(self, **kwargs):
         post_params = cherrypy.request.body.params
-        
+
         for param_name in [ 'username', 'password', 'g-recaptcha-response' ]:
             if param_name not in post_params or (param_name in post_params and len(post_params[param_name]) == 0):
                 raise cherrypy.HTTPError(400,"You didn't send requird params...")
-        
+
         session = requests.session()
         session.get('https://www.torrentday.com/login.php', verify=False, timeout=30) # get __cfduid cookie
         session.post('https://www.torrentday.com/tak3login.php', verify=False, timeout=30, data=post_params)
-        
+
         if not hasattr(session,'cookies') or not all(s in requests.utils.dict_from_cookiejar(session.cookies) for s in ['PHPSESSID', 'uid', 'pass']):
             raise cherrypy.HTTPError(400,"Website didnt send all required cookies back to us...")
-        
+
         return json.dumps(requests.utils.dict_from_cookiejar(session.cookies))
 
     @cherrypy.expose
