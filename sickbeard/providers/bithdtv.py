@@ -155,8 +155,8 @@ class BitHDTVProvider(generic.TorrentProvider):
         data = self.getURL(searchUrl)
         if data:
             logger.log("[" + self.name + "] parseResults() URL: " + searchUrl, logger.DEBUG)
-            for torrent in re.compile("<td class=detail align=left><a title=\"(?P<title>.*?)\" href.*?<font class=small></font><a href=\"/(?P<url>.*?)\.torrent\"></a>",re.MULTILINE|re.DOTALL).finditer(data):
-                item = (torrent.group('title').replace('.',' ').decode('utf-8', 'ignore'), self.url + torrent.group('url') + ".torrent")
+            for torrent in re.compile("<td class=detail align=left><a title=\"(?P<title>.*?)\" href.*?<font class=small></font><a href=\'download\.php\?id\=(?P<downloadId>.*?)\'></a>",re.MULTILINE|re.DOTALL).finditer(data):
+                item = (torrent.group('title').replace('.',' ').decode('utf-8', 'ignore'), self.url + "download.php?id=" + torrent.group('downloadId'))
                 self.search_results.append(item)
                 logger.log("[" + self.name + "] parseResults() Title: " + torrent.group('title').decode('utf-8', 'ignore'), logger.DEBUG)
         else:
