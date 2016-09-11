@@ -252,7 +252,7 @@ $(document).ready(function () {
             var JSONData = $.parseJSON(data || "null");
             $("#testNMJv2-result").html(JSONData.message);
             $("#nmjv2_database").val(JSONData.database);
-            
+
             if (JSONData.database) {
                 $("#nmjv2_database").prop("readonly", true);
             } else {
@@ -335,7 +335,7 @@ $(document).ready(function () {
                 $("#testSynoNotify").prop("disabled", false);
             });
     });
-        
+
     $("#testPushbullet").click(function () {
         var pushbullet_access_token = $.trim($("#pushbullet_access_token").val());
         var pushbullet_device_iden = $("#pushbullet_device_iden").val();
@@ -401,5 +401,24 @@ $(document).ready(function () {
     if ($("#use_pushbullet").prop('checked')) {
         get_pushbullet_devices();
     }
+
+    $("#testSlack").click(function () {
+        var slack_webhook_url = $("#slack_webhook_url").val();
+        var slack_channel = $("#slack_channel").val();
+        var slack_bot_name = $("#slack_bot_name").val();
+        var slack_icon_url = $("#slack_icon_url").val();
+        if (!slack_webhook_url || !slack_channel || !slack_bot_name) {
+            $("#testSlack-result").html("Please fill out the necessary fields above.");
+            return;
+        }
+        $(this).prop("disabled", true);
+        $("#testSlack-result").html(loading);
+        $.get(sbRoot + "/home/testSlack", {'webhookUrl': slack_webhook_url, 'channel': slack_channel, 'bot_name': slack_bot_name, 'icon_url': slack_icon_url})
+            .done(function (data) {
+                $("#testSlack-result").html(data);
+                $("#testSlack").prop("disabled", false);
+            });
+    });
+
 
 });
