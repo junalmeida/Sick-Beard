@@ -1335,12 +1335,7 @@ def save_config():
     new_config['REVOLUTIONTT']['revolutiontt'] = int(REVOLUTIONTT)
     new_config['REVOLUTIONTT']['revolutiontt_username'] = REVOLUTIONTT_USERNAME
     new_config['REVOLUTIONTT']['revolutiontt_password'] = REVOLUTIONTT_PASSWORD
-<<<<<<< HEAD
-    new_config['REVOLUTIONTT']['revolutiontt_rsshash'] = REVOLUTIONTT_RSSHASH
-
-=======
     
->>>>>>> junalmeida/torrentProviders
     new_config['BTDIGG'] = {}
     new_config['BTDIGG']['btdigg'] = int(BTDIGG)
 
