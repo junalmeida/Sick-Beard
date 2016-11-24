@@ -159,6 +159,7 @@ NZB_METHOD = None
 NZB_DIR = None
 USENET_RETENTION = None
 DOWNLOAD_PROPERS = None
+DOWNLOAD_AVOID_JUNK = None
 PREFER_EPISODE_RELEASES = None
 
 SEARCH_FREQUENCY = None
@@ -407,7 +408,7 @@ def initialize(consoleLogging=True):
     with INIT_LOCK:
 
         global ACTUAL_LOG_DIR, LOG_DIR, WEB_PORT, WEB_LOG, WEB_ROOT, WEB_USERNAME, WEB_PASSWORD, WEB_HOST, WEB_IPV6, USE_API, API_KEY, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, \
-                USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR,TORRENT_METHOD, DOWNLOAD_PROPERS, PREFER_EPISODE_RELEASES, \
+                USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR,TORRENT_METHOD, DOWNLOAD_PROPERS, DOWNLOAD_AVOID_JUNK, PREFER_EPISODE_RELEASES, \
                 SAB_USERNAME, SAB_PASSWORD, SAB_APIKEY, SAB_CATEGORY, SAB_HOST, \
                 TORRENT_USERNAME, TORRENT_PASSWORD, TORRENT_LABEL, TORRENT_HOST, TORRENT_PATH, TORRENT_RATIO, TORRENT_PAUSED, \
                 NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, currentSearchScheduler, backlogSearchScheduler, \
@@ -566,6 +567,7 @@ def initialize(consoleLogging=True):
         if TORRENT_METHOD not in ('blackhole', 'utorrent', 'transmission', 'downloadstation', 'deluge'):
             TORRENT_METHOD = 'blackhole'
         DOWNLOAD_PROPERS = bool(check_setting_int(CFG, 'General', 'download_propers', 1))
+        DOWNLOAD_AVOID_JUNK = bool(check_setting_int(CFG, 'General', 'download_avoid_junk', 0))
         PREFER_EPISODE_RELEASES = bool(check_setting_int(CFG, 'General', 'prefer_episode_releases', 0))
 
         USENET_RETENTION = check_setting_int(CFG, 'General', 'usenet_retention', 500)
@@ -1196,6 +1198,7 @@ def save_config():
     new_config['General']['usenet_retention'] = int(USENET_RETENTION)
     new_config['General']['search_frequency'] = int(SEARCH_FREQUENCY)
     new_config['General']['download_propers'] = int(DOWNLOAD_PROPERS)
+    new_config['General']['download_avoid_junk'] = int(DOWNLOAD_AVOID_JUNK)
     new_config['General']['prefer_episode_releases'] = int(PREFER_EPISODE_RELEASES)
     new_config['General']['quality_default'] = int(QUALITY_DEFAULT)
     new_config['General']['status_default'] = int(STATUS_DEFAULT)

@@ -858,7 +858,7 @@ class TVShow(object):
             return False
 
         myDB = db.DBConnection()
-        sqlResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND season = ? AND episode = ?", [self.tvdbid, season, episode])
+        sqlResults = myDB.select("SELECT status,airdate FROM tv_episodes WHERE showid = ? AND season = ? AND episode = ?", [self.tvdbid, season, episode])
 
         if not sqlResults or not len(sqlResults):
             logger.log(u"Unable to find a matching episode in database, ignoring found episode", logger.DEBUG)
@@ -868,6 +868,15 @@ class TVShow(object):
         epStatus_text = statusStrings[epStatus]
 
         logger.log(u"Existing episode status: " + str(epStatus) + " (" + epStatus_text + ")", logger.DEBUG)
+        epAirdate = datetime.date.fromordinal(sqlResults[0]["airdate"])
+
+
+        logger.log(u"current episode air date: " + str(epAirdate), logger.DEBUG)
+		
+        # if episode hasn't aired yet, say no to avoid junk downloads
+        if epAirdate >= (datetime.date.today()) and sickbeard.DOWNLOAD_AVOID_JUNK:
+            logger.log(u"Ep hasn't aired yet, skipping to avoid junk downloads", logger.DEBUG)
+            return False
 
         # if we know we don't want it then just say no
         if epStatus in (SKIPPED, IGNORED, ARCHIVED) and not manualSearch:

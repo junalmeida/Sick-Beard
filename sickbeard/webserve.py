@@ -810,6 +810,7 @@ class ConfigSearch:
 
         # Episode Search
         sickbeard.DOWNLOAD_PROPERS = config.checkbox_to_value(postData.get("download_propers"))
+        sickbeard.DOWNLOAD_AVOID_JUNK = config.checkbox_to_value(postData.get("download_avoid_junk"))
 
         if sickbeard.DOWNLOAD_PROPERS:
             sickbeard.properFinderScheduler.silent = False
