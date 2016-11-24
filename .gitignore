@@ -31,6 +31,7 @@ tests/cache.db
 *.tmproject
 *.sw?
 *.settings
+.idea/*
 
 # OS generated files #
 ######################

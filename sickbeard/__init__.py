@@ -240,6 +240,7 @@ ADD_SHOWS_WO_DIR = None
 CREATE_MISSING_SHOW_DIRS = None
 RENAME_EPISODES = False
 PROCESS_AUTOMATICALLY = False
+PROCESS_METHOD = None
 KEEP_PROCESSED_DIR = False
 MOVE_ASSOCIATED_FILES = False
 FILTER_ASSOCIATED_FILES = None
@@ -447,7 +448,7 @@ def initialize(consoleLogging=True):
                 USE_PUSHALOT, PUSHALOT_NOTIFY_ONSNATCH, PUSHALOT_NOTIFY_ONDOWNLOAD, PUSHALOT_AUTHORIZATIONTOKEN, PUSHALOT_SILENT, PUSHALOT_IMPORTANT, \
                 USE_PUSHBULLET, PUSHBULLET_NOTIFY_ONSNATCH, PUSHBULLET_NOTIFY_ONDOWNLOAD, PUSHBULLET_ACCESS_TOKEN, PUSHBULLET_DEVICE_IDEN, \
                 versionCheckScheduler, VERSION_NOTIFY, PROCESS_AUTOMATICALLY, \
-                KEEP_PROCESSED_DIR, TV_DOWNLOAD_DIR, TVDB_BASE_URL, MIN_SEARCH_FREQUENCY, \
+                KEEP_PROCESSED_DIR, PROCESS_METHOD, TV_DOWNLOAD_DIR, TVDB_BASE_URL, MIN_SEARCH_FREQUENCY, \
                 showQueueScheduler, searchQueueScheduler, ROOT_DIRS, CACHE_DIR, ACTUAL_CACHE_DIR, TVDB_API_PARMS, \
                 NAMING_PATTERN, NAMING_MULTI_EP, NAMING_FORCE_FOLDERS, NAMING_ABD_PATTERN, NAMING_CUSTOM_ABD, \
                 RENAME_EPISODES, properFinderScheduler, PROVIDER_ORDER, autoPostProcesserScheduler, \
@@ -577,6 +578,7 @@ def initialize(consoleLogging=True):
         PROCESS_AUTOMATICALLY = check_setting_int(CFG, 'General', 'process_automatically', 0)
         RENAME_EPISODES = check_setting_int(CFG, 'General', 'rename_episodes', 1)
         KEEP_PROCESSED_DIR = check_setting_int(CFG, 'General', 'keep_processed_dir', 1)
+        PROCESS_METHOD = check_setting_str(CFG, 'General', 'process_method', 'copy' if KEEP_PROCESSED_DIR else 'move')
         MOVE_ASSOCIATED_FILES = check_setting_int(CFG, 'General', 'move_associated_files', 0)
         FILTER_ASSOCIATED_FILES = check_setting_str(CFG, 'General', 'filter_associated_files', '')
         CREATE_MISSING_SHOW_DIRS = check_setting_int(CFG, 'General', 'create_missing_show_dirs', 0)
@@ -1221,6 +1223,7 @@ def save_config():
     new_config['General']['root_dirs'] = ROOT_DIRS if ROOT_DIRS else ''
     new_config['General']['tv_download_dir'] = TV_DOWNLOAD_DIR
     new_config['General']['keep_processed_dir'] = int(KEEP_PROCESSED_DIR)
+    new_config['General']['process_method'] = PROCESS_METHOD
     new_config['General']['move_associated_files'] = int(MOVE_ASSOCIATED_FILES)
     new_config['General']['filter_associated_files'] = FILTER_ASSOCIATED_FILES
     new_config['General']['process_automatically'] = int(PROCESS_AUTOMATICALLY)
