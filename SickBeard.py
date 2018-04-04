@@ -352,13 +352,16 @@ def main():
 
     # sickbeard.WEB_HOST is available as a configuration value in various
     # places but is not configurable. It is supported here for historic reasons.
-    if sickbeard.WEB_HOST and sickbeard.WEB_HOST != '0.0.0.0':
+    if sickbeard.WEB_HOST:
         webhost = sickbeard.WEB_HOST
     else:
-        if sickbeard.WEB_IPV6:
+        webhost = '127.0.0.1'
+
+    if sickbeard.WEB_IPV6:
+        if webhost == '127.0.0.1':
+            webhost = '::1'
+        elif webhost == '0.0.0.0':
             webhost = '::'
-        else:
-            webhost = '127.0.0.1'
 
     if forcedHost:
         logger.log(u"Forcing web server to address " + str(forcedHost))
