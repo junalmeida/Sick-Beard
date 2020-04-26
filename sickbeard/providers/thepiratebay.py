@@ -21,6 +21,7 @@
 ###################################################################################################
 
 import re
+import json
 import urllib, urllib2
 import sys
 import datetime
@@ -57,8 +58,9 @@ class ThePirateBayProvider(generic.TorrentProvider):
         self.cache = ThePirateBayCache(self)
         self.proxy = ThePirateBayWebproxy() 
         self.url = 'http://thepiratebay.org/'
-        self.searchurl =  self.url + 'search/%s/0/7/200'  # order by seed       
-        self.re_title_url = '<td>.*?".*?/torrent/\d+/(?P<title>.*?)%s".*?<a href=".*?(?P<url>magnet.*?)%s".*?</td>'
+        self.apiURL = None
+        self.jsURL = None
+        self.trackers = None
         self.trusted = [
             "trusted",
             "vip",
@@ -156,32 +158,17 @@ class ThePirateBayProvider(generic.TorrentProvider):
     def _doSearch(self, search_params, show=None):
         results = []
 
-        # scrape the api address from tpb
-        scrape_tpb = self.getURL(self.url)
-        js_url = re.findall('<script.*?src="(?P<url>.*\.js)".*?>',scrape_tpb)[0]
-        scrape_js = self.getURL(js_url)
-        self.api_server = re.findall("var server='(?P<server>.*?)'", scrape_js)[0]
-        # scrape trackers from api
-        trackers = re.findall("&tr='.*?'(?P<tracker>.*?)\'\)", scrape_js)
-        self.trackers = "&tr=".join(trackers)
+        if not self.apiURL:
+            self.getAPI()
         
-        searchURL = self.api_server + "/q.php?q=" + urllib.quote(search_params)
+        searchURL = self.apiURL + "/q.php?q=" + urllib.quote(search_params)
         logger.log(u"Search string: " + searchURL, logger.DEBUG)
                     
         data = self.getURL(searchURL)
-        if not data:
+        if not ":" in data:
             return []
 
-        # convert the raw data to a list of dicts
-        data = data[1:len(data)-2].split('},{')
-        torrents = []
-        for thing in data:
-            match = {}
-            for line in thing.split('","'):
-                line = line.replace('"','')
-                match[line.split(":")[0]] = line.split(":")[1]
-            torrents.append(match)
-
+        torrents = json.loads(data)
         if torrents[0]["name"] == "No results returned":
             return []
         
@@ -193,7 +180,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
                 logger.log(u"ThePirateBay Provider found result "+torrent.group('title')+" but that doesn't seem like a trusted result so I'm ignoring it",logger.DEBUG)
                 continue
 
-            magnet_link = "magnet:?xt=urn:btih:" + torrent["info_hash"] + "&dn=" + torrent["name"] + "&tr=" + self.trackers
+            magnet_link = self.createMagnet(torrent["info_hash"],torrent["name"],self.trackers)
 
             #Do not know why but Sick Beard skip release with a '_' in name
             item = (torrent["name"].replace('_','.'),magnet_link)
@@ -250,6 +237,25 @@ class ThePirateBayProvider(generic.TorrentProvider):
             logger.log(u"Saved magnet link to "+magnetFileName+" ", logger.MESSAGE)
             return True
 
+    ###################################################################################################
+    def getAPI(self):
+        """
+        scrapes the tpb javascript files for api server and trackers
+        """
+        scrape_tpb = self.getURL(self.url)
+        self.jsURL = re.findall('<script.*?src="(?P<url>.*\.js)".*?>',scrape_tpb)[0]
+        scrape_js = self.getURL(self.jsURL)
+        self.apiURL = re.findall("var server='(?P<server>.*?)'", scrape_js)[0]
+
+        # scrape trackers from api
+        trackers = re.findall("&tr='.*?'(?P<tracker>.*?)\'\)", scrape_js)
+        self.trackers = "&tr=".join(trackers)
+
+    ###################################################################################################
+    def createMagnet(self,info_hash,dn,trackers):
+        magnet_link = "magnet:?xt=urn:btih:" + info_hash + "&dn=" + dn + "&tr=" + trackers
+        return magnet_link
+
 class ThePirateBayCache(tvcache.TVCache):
     ###################################################################################################
     def __init__(self, provider):
@@ -259,36 +265,46 @@ class ThePirateBayCache(tvcache.TVCache):
 
     ###################################################################################################
     def updateCache(self):
-        re_title_url = self.provider.proxy._buildRE(self.provider.re_title_url)
         if not self.shouldUpdate():
             return
         data = self._getData()
         # as long as the http request worked we count this as an update
-        if data:
+        if ":" in data:
             self.setLastUpdate()
         else:
             return []
         # now that we've loaded the current RSS feed lets delete the old cache
         logger.log(u"Clearing "+self.provider.name+" cache and updating with new information")
         self._clearCache()
-        match = re.compile(re_title_url, re.DOTALL).finditer(urllib.unquote(data))
-        if not match:
-            logger.log(u"The Data returned from the ThePirateBay is incomplete, this result is unusable", logger.ERROR)
+
+        torrents = json.loads(data)
+        if torrents[0]["name"] == "No results returned":
             return []
-                
-        for torrent in match:
-            #accept torrent only from Trusted people
-            if sickbeard.THEPIRATEBAY_TRUSTED and re.search('(VIP|Trusted|Helpers)',torrent.group(0))== None:
-                logger.log(u"ThePirateBay Provider found result "+torrent.group('title')+" but that doesn't seem like a trusted result so I'm ignoring it",logger.DEBUG)
+
+        for torrent in torrents:
+            if torrent["seeders"] == "0":
                 continue
-            
-            item = (torrent.group('title').replace('_','.'),torrent.group('url'))
+
+            if sickbeard.THEPIRATEBAY_TRUSTED and not torrent["status"] in self.provider.trusted:
+                continue
+
+            magnet_link = self.provider.createMagnet(torrent["info_hash"],torrent["name"],self.provider.trackers)
+
+            item = (torrent["name"].replace('_','.'),magnet_link)
             self._parseItem(item)
 
     ###################################################################################################
     def _getData(self):
-        url = self.provider.proxy._buildURL(self.provider.url + 'tv/latest/') #url for the last 50 tv-show
+        if not self.provider.apiURL:
+            self.provider.getAPI()
+
+        # this builds the URL for the top 100 of a certain category
+        # however, filtering by category doesnt work, even on the
+        # offical site as of 4/26/2020. This url should be rechecked
+        # in the future
+        url = self.provider.apiURL + '/precompiled/data_top100_recent.json?cat=205' #url for the last 100 tv-show
         logger.log(u"ThePirateBay cache update URL: "+ url, logger.DEBUG)
+
         data = self.provider.getURL(url)
         return data
 
