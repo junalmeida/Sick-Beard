@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Sick Beard is no longer actively maintained. Old versions may still work, but if you have any issues or are doing a new install I recommend you use Sonarr or one of the many active SickBeard forks.
+
 Sick Beard
 =====
 
@@ -58,4 +61,5 @@ If you want to contribute fork this project and open a Pull Request to `master` 
 [githubnewissue]: https://github.com/junalmeida/Sick-Beard/issues/new
 [jsonrpclib]: https://github.com/joshmarshall/jsonrpclib
 [githubdownloads]: https://github.com/midgetspy/Sick-Beard/releases
+
 [wiki]: https://github.com/junalmeida/Sick-Beard/wiki
